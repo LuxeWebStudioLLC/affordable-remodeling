@@ -34,36 +34,59 @@ export default function Work() {
 
       const dist = () => Math.max(0, el.scrollWidth - window.innerWidth);
 
-      /* Phones drive the strip faster than 1:1 so the pin doesn't swallow
-         five screens of scrolling to get through twelve photos. Desktop
-         stays 1:1, where the pointer expects a direct mapping. */
-      const ratio = () =>
-        window.matchMedia("(min-width: 1024px)").matches ? 1 : 0.5;
-
       const setBar = bar.current ? gsap.quickSetter(bar.current, "scaleX") : null;
 
-      const tween = gsap.to(el, {
-        x: () => -dist(),
-        ease: "none",
-        scrollTrigger: {
-          trigger: root.current,
-          start: "top top",
-          end: () => "+=" + Math.round(dist() * ratio()),
-          pin: true,
-          scrub: 1,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            if (setBar) setBar(Math.max(0.001, self.progress));
-            if (counter.current) {
-              const n = Math.min(
-                WORK.length,
-                Math.round(self.progress * (WORK.length - 1)) + 1,
-              );
-              counter.current.textContent = String(n).padStart(2, "0");
-            }
-          },
-        },
+      const onUpdate = (self) => {
+        if (setBar) setBar(Math.max(0.001, self.progress));
+        if (counter.current) {
+          const n = Math.min(
+            WORK.length,
+            Math.round(self.progress * (WORK.length - 1)) + 1,
+          );
+          counter.current.textContent = String(n).padStart(2, "0");
+        }
+      };
+
+      /* Touch and pointer want different tuning, so each gets its own build
+         instead of one compromise that suits neither:
+
+         ratio — how much vertical scroll the strip costs. 1:1 is right for a
+           pointer. Phones get 0.72, not the old 0.5: at 0.5 the strip moved
+           at double finger speed, which reads as twitchy rather than fast.
+
+         scrub — desktop keeps the 1s lerp because ScrollSmoother already
+           hands it a smoothed signal. Touch takes the value straight:
+           momentum scrolling IS the smoothing, and stacking a second lerp on
+           top of it is what shows up as lag and stutter.
+
+         anticipatePin — earns its keep against a fast mouse wheel, but causes
+           a visible hop when a pin engages under a finger, so touch opts out. */
+      const CONFIG = {
+        "(min-width: 1024px)": { ratio: 1, scrub: 1, anticipatePin: 1 },
+        "(max-width: 1023.98px)": { ratio: 0.72, scrub: true, anticipatePin: 0 },
+      };
+
+      const mm = gsap.matchMedia();
+
+      Object.entries(CONFIG).forEach(([query, cfg]) => {
+        mm.add(query, () => {
+          const tween = gsap.to(el, {
+            x: () => -dist(),
+            ease: "none",
+            force3D: true,
+            scrollTrigger: {
+              trigger: root.current,
+              start: "top top",
+              end: () => "+=" + Math.round(dist() * cfg.ratio),
+              pin: true,
+              scrub: cfg.scrub,
+              anticipatePin: cfg.anticipatePin,
+              invalidateOnRefresh: true,
+              onUpdate,
+            },
+          });
+          return () => tween.scrollTrigger?.kill();
+        });
       });
 
       /* The track's width depends on images having laid out; re-measure once
@@ -81,7 +104,7 @@ export default function Work() {
         });
       }
 
-      return () => tween.scrollTrigger?.kill();
+      return () => mm.revert();
     }, root);
 
     return () => ctx.revert();
@@ -91,11 +114,17 @@ export default function Work() {
     <section id="work" ref={root} className="relative grain overflow-hidden bg-ink">
       <div className="flex h-[100svh] flex-col justify-center">
         {/* Rail — transform-driven at every size; never natively scrollable,
-            or the browser and the scrub would both try to move it. */}
-        <div className="overflow-hidden">
+            or the browser and the scrub would both try to move it.
+            `contain: paint` keeps repaints inside the rail instead of letting
+            them invalidate the whole section on every frame. */}
+        <div className="overflow-hidden [contain:paint]">
           <div
             ref={track}
-            className="flex w-max items-center gap-[5vw] px-[6vw] lg:gap-[3.5vw] lg:will-change-transform"
+            /* GPU promotion at EVERY size. This was `lg:will-change-transform`,
+               so phones — the devices that can least afford it — were
+               compositing six full-bleed photos on the CPU every frame. That
+               was the bulk of the reported bumpiness. */
+            className="flex w-max transform-gpu items-center gap-[5vw] px-[6vw] will-change-transform lg:gap-[3.5vw]"
           >
             {/* Intro panel rides inside the strip */}
             <div className="w-[70vw] shrink-0 lg:w-[26vw]">

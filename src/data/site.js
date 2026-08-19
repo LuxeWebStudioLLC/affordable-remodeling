@@ -310,16 +310,23 @@ export const SERVICE_AREA = {
 };
 
 /**
- * Studio credit in the footer. ⚠️ CONTACT PLACEHOLDER: this email is the
- * site owner's personal address — swap in the studio's real email (or a
- * portfolio URL) before launch if you have one.
+ * Studio credit in the footer. Enquiries go through a small inline form
+ * rather than a mailto, so no personal address is exposed in the markup.
+ *
+ * `endpoint` posts to FormSubmit, which needs no account and no API key:
+ * the first submission triggers a one-time confirmation email to the address
+ * below, and everything after it is delivered straight through.
+ *
+ * ℹ️ This repo is public, so the address is readable in the bundle. FormSubmit
+ * issues a random alias after the first send — swapping the address in the URL
+ * for that alias makes the endpoint opaque to scrapers.
  */
 export const CREDIT = {
   studio: "Luxe Web Studio LLC",
   line: "Like this website?",
   blurb: "Luxe Web Studio designs and builds sites like this one.",
   cta: "Start a conversation",
-  email: "devin.a.brown@icloud.com",
+  endpoint: "https://formsubmit.co/ajax/luxewebstudio112@gmail.com",
 };
 
 export const FAQS = [
