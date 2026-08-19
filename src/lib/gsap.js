@@ -2,10 +2,9 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { SplitText } from "gsap/SplitText";
-import { Draggable } from "gsap/Draggable";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 
-gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText, Draggable, ScrollToPlugin);
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText, ScrollToPlugin);
 
 /* On phones the browser chrome collapsing on scroll fires a resize, which
    would otherwise re-measure every trigger mid-scroll and make pinned
@@ -43,4 +42,4 @@ if (import.meta.env.DEV && typeof window !== "undefined") {
   window.__gsap = { gsap, ScrollTrigger, ScrollSmoother };
 }
 
-export { gsap, ScrollTrigger, ScrollSmoother, SplitText, Draggable };
+export { gsap, ScrollTrigger, ScrollSmoother, SplitText };

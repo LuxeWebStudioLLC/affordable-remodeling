@@ -2,11 +2,11 @@
 
 A new marketing site for **Affordable Home Remodeling Corp.** (La Crosse, WI), built to the
 structure and visual language of [axelslandscapingdesign.com](https://axelslandscapingdesign.com)
-and extended with a multi-step estimate request form, a filterable project gallery, and a
-draggable before/after comparison.
+and extended with a multi-step estimate request form, a scroll-driven horizontal project
+gallery, a before/after feature, and a custom service-area map.
 
 Stack: **React 19 + Vite 8 + Tailwind CSS 4 + GSAP 3.15** (ScrollTrigger, ScrollSmoother,
-SplitText, Draggable).
+SplitText, ScrollToPlugin).
 
 ---
 
@@ -89,7 +89,10 @@ copy is hardcoded into components.
 | Phone / email / service area | `BUSINESS` |
 | The ten services + descriptions | `SERVICES` |
 | Gallery images and category labels | `WORK` |
-| "Why hire us" cards | `WHY_US` |
+| Before/after pair | `WORK` images + `Transformation.jsx` |
+| Financing terms | `FINANCING` |
+| Service-area towns | `SERVICE_AREA` |
+| Footer studio credit | `CREDIT` |
 | Stats strip | `STATS` |
 | FAQ questions | `FAQS` |
 | Form dropdown options | `PROJECT_TYPES`, `BUDGETS`, `TIMELINES` |
@@ -97,7 +100,7 @@ copy is hardcoded into components.
 
 ---
 
-## Three things to do before launch
+## Before launch
 
 ### 1. Wire the contact form to a real inbox
 
@@ -135,22 +138,20 @@ export const REVIEWS = [
 ];
 ```
 
-### 3. Swap in their own project photography
+### 3. Replace the hero background (optional)
 
-The photos in `public/images/` are licensed Unsplash stock standing in for real work. Affordable's
-current site has almost no project photography, so there was nothing to carry over. Replacing
-these with actual jobs will do more for conversion than anything else on the page — the gallery
-tiles are the first thing people scroll to.
+Every photo in the gallery, the before/after, and the approach section is now **real
+Affordable Remodeling work**, supplied by the client. The one exception is the hero: the
+background video and its poster (`hero-home.jpg`) are still stock, because the supplied
+photos top out around 1200px wide and the hero runs full-bleed past 1440px, where they
+would visibly soften.
 
-Keep the filenames and the site picks them up with no code changes. Recommended sizes:
+If a camera-original exterior shot turns up (straight off the phone, not routed through
+Facebook, which recompresses), drop it in as `public/images/hero-home.jpg` at ~2400px wide
+and it is picked up with no code change.
 
-- `hero-home.jpg` — 2400px wide, landscape
-- `work-*.jpg` — 1800px wide (displayed as 4:5 portrait crops)
-- `svc-*.jpg` — 1600px wide
-- `ba-before.jpg` / `ba-after.jpg` — **the same room from the same spot**, 1800px wide
-
-The gallery caption in `Work.jsx` currently reads "Photography shown is representative of our
-scope of work." Delete that line once the images are their own.
+Also worth doing eventually: `public/video/hero.mp4` is 7.4 MB, roughly double ideal. Any
+`ffmpeg` re-encode at CRF 28 would roughly halve it with no visible loss.
 
 ---
 
@@ -161,10 +162,14 @@ Squarespace serves):
 
 | File | Use |
 | --- | --- |
-| `logo-full.png` | Full stacked lockup, transparent background |
-| `logo-icon.png` / `logo-icon-mono.png` | House mark only — navbar, hero, favicon |
-| `logo-word.png` / `logo-word-mono.png` | Wordmark only |
-| `logo-mono.png` | Full lockup knocked out in cream, for dark backgrounds |
+| `logo.png` | The untouched original, as served by their current site |
+| `logo-icon.png` | House mark only — navbar, footer, hero, favicon source |
+| `logo-word.png` | Wordmark only — rides the light navbar |
+| `favicon.png` | 96px browser tab icon |
+
+Every logo on the site is the **full-colour artwork**. Earlier cream/mono knockouts were
+deleted: their wordmark is dark blue, which is unreadable on the dark sections, so the mark
+carries dark contexts alone and the footer sets the company name in type beside it.
 
 The navbar and footer compose the icon and wordmark into a **horizontal lockup**, because the
 stacked original is unreadable at 40px tall.
@@ -191,9 +196,9 @@ remounts never leak triggers.
 
 **Accessibility and motion.** `prefers-reduced-motion: reduce` is honored throughout: the
 preloader is skipped, ScrollSmoother never initializes, marquees stop, and reveals resolve to
-their final state instead of animating. The before/after divider is keyboard-operable with arrow
-keys, the accordions use real `aria-expanded`/`aria-controls`, form errors are announced via
-`role="alert"`, and there is a skip link.
+their final state instead of animating. The accordions use real
+`aria-expanded`/`aria-controls`, form errors are announced via `role="alert"`, the footer
+credit card closes on Escape and outside-click, and there is a skip link.
 
 **SEO.** `index.html` carries the title, meta description, Open Graph tags, and a
 `HomeAndConstructionBusiness` JSON-LD block with the real phone, address, service radius, and
