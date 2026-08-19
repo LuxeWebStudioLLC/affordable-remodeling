@@ -5,27 +5,26 @@ import { WORK } from "../data/site";
 
 /**
  * The gallery as a horizontal editorial strip: scroll down, the strip pans
- * right. Same effect everywhere, but driven three different ways, because
- * "smooth" means something different on each.
+ * right. Two drivers, one per input type:
  *
  * DESKTOP (≥1024px) — GSAP pin + scrub. A wheel gives a steady main-thread
- *   signal and ScrollSmoother smooths it further, so a JS transform is silky.
+ *   signal and ScrollSmoother smooths it further; a JS transform is silky.
  *
- * TOUCH, modern browsers — CSS scroll-driven animation. The section is its own
- *   `view-timeline`, the pan is a keyframe animation against it, and sticky
- *   does the pinning. The compositor evaluates all of it, so it cannot stutter.
- *   Doing this in JS is what made it bumpy before: iOS throttles main-thread
- *   JS during momentum scrolling, so a scrollY-derived transform is always
- *   late. Handing the whole thing to CSS removes the main thread entirely.
+ * TOUCH — native `position: sticky` does the pinning (compositor-handled on
+ *   every phone browser, no reparenting, no fixed-position juggling) and a
+ *   rAF loop lerps the track toward the scroll-derived target. The lerp is
+ *   the whole trick: iOS delivers scroll positions in bursts during momentum,
+ *   and easing toward the target fills the gaps instead of snapping between
+ *   them. This is the boring, universal version after two clever ones — a
+ *   GSAP pin (janky: fixed-position pinning fights mobile browser chrome) and
+ *   a CSS scroll-driven animation (gorgeous in Chrome, unverifiable on the
+ *   Safari builds that kept failing on the client's actual phone).
  *
- * TOUCH, older browsers — native horizontal swipe. Manual, but perfectly
- *   smooth, and nobody gets a broken section.
- *
- * All this component does at runtime is measure the pan distance and keep the
- * counter honest. Nothing here runs per frame.
+ * If JS never runs, touch falls back to the natively swipeable rail under
+ * reduced-motion, where the pan is disabled entirely.
  *
  * Deliberately nothing inside the track is scroll-revealed: content in a
- * pinned scrub must be visible by default or the pin and the reveals fight.
+ * pinned strip must be visible by default or the pin and the reveals fight.
  */
 
 /* Editorial rhythm: [width vw, tall?] per tile at lg. Six real jobs beat
@@ -36,12 +35,6 @@ const LAYOUT = [
 ];
 
 const DESKTOP = "(min-width: 1024px)";
-
-/** True when the browser can run the CSS-driven pan (Chrome 115+, Safari 26+). */
-const cssTimeline = () =>
-  typeof CSS !== "undefined" &&
-  CSS.supports &&
-  CSS.supports("animation-timeline", "view()");
 
 export default function Work() {
   const root = useRef(null);
@@ -58,9 +51,7 @@ export default function Work() {
     if (!rootEl || !railEl || !trackEl) return;
 
     const isDesktop = () => window.matchMedia(DESKTOP).matches;
-    /* The CSS path is gated on the same conditions as the stylesheet. */
-    const cssPanActive = () =>
-      cssTimeline() && !isDesktop() && !prefersReducedMotion();
+    const reduced = prefersReducedMotion();
 
     /* ---- The one measurement: how far the track has to travel. ---- */
     const measure = () => {
@@ -68,57 +59,88 @@ export default function Work() {
       rootEl.style.setProperty("--pan", `${Math.round(pan)}px`);
       return pan;
     };
-    measure();
+    let pan = measure();
 
-    /* ---- Counter. The bar is animated by CSS on the touch path and by GSAP
-            on desktop; only the digits need writing by hand. Text lagging a
-            frame is invisible, and it never touches the strip's smoothness. ---- */
+    const setX = gsap.quickSetter(trackEl, "x", "px");
     const setBar = bar.current ? gsap.quickSetter(bar.current, "scaleX") : null;
     const writeCounter = (p) => {
       if (!counter.current) return;
-      const c = Math.min(1, Math.max(0, p));
-      const n = Math.min(WORK.length, Math.round(c * (WORK.length - 1)) + 1);
+      const n = Math.min(WORK.length, Math.round(p * (WORK.length - 1)) + 1);
       counter.current.textContent = String(n).padStart(2, "0");
     };
 
-    let queued = false;
-    const onScroll = () => {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(() => {
-        queued = false;
-        if (isDesktop()) return; // GSAP owns it
+    /* ---- Touch driver: sticky pins, this lerps. ---- */
+    let raf = 0;
+    let current = 0;
+    let running = false;
 
-        if (cssPanActive()) {
-          /* Mirror the CSS `contain` range: progress through the window where
-             the section fully covers the viewport. */
-          const r = rootEl.getBoundingClientRect();
-          const span = r.height - window.innerHeight;
-          writeCounter(span > 0 ? -r.top / span : 0);
-        } else {
-          const max = railEl.scrollWidth - railEl.clientWidth;
-          const p = max > 0 ? railEl.scrollLeft / max : 0;
-          writeCounter(p);
-          if (setBar) setBar(Math.max(0.001, p));
-          if (hint.current && railEl.scrollLeft > 24) {
-            hint.current.dataset.done = "true";
-          }
-        }
-      });
+    const frame = () => {
+      raf = 0;
+      if (isDesktop()) return; // GSAP owns it up there
+
+      /* Progress of the sticky stage through the section's extra height.
+         offsetHeight-based so the collapsing iOS URL bar can't shift it. */
+      const span = rootEl.offsetHeight - (rootEl.firstElementChild?.offsetHeight || 0);
+      const top = rootEl.getBoundingClientRect().top;
+      const target = span > 0 ? Math.min(1, Math.max(0, -top / span)) : 0;
+
+      /* 0.16/frame: settles in ~0.3s, tight enough to feel attached to the
+         finger, loose enough to swallow bursty scroll updates. */
+      current += (target - current) * 0.16;
+      if (Math.abs(target - current) < 0.0005) current = target;
+
+      setX(-current * pan);
+      if (setBar) setBar(Math.max(0.001, current));
+      writeCounter(current);
+
+      if (running) raf = requestAnimationFrame(frame);
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    railEl.addEventListener("scroll", onScroll, { passive: true });
+    const start = () => {
+      if (!running) {
+        running = true;
+        if (!raf) raf = requestAnimationFrame(frame);
+      }
+    };
+    const stop = () => {
+      running = false;
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    /* Only spend frames while the section is anywhere near the screen. */
+    let io = null;
+    if (!reduced && "IntersectionObserver" in window) {
+      io = new IntersectionObserver(
+        (entries) => entries.forEach((e) => (e.isIntersecting ? start() : stop())),
+        { rootMargin: "60% 0px" },
+      );
+      io.observe(rootEl);
+    } else if (!reduced) {
+      start();
+    }
+
+    /* ---- Reduced motion: the rail stays natively swipeable; keep the
+            instrument honest from its scroll position. ---- */
+    const onRailScroll = () => {
+      const max = railEl.scrollWidth - railEl.clientWidth;
+      const p = max > 0 ? railEl.scrollLeft / max : 0;
+      if (setBar) setBar(Math.max(0.001, p));
+      writeCounter(p);
+      if (hint.current && railEl.scrollLeft > 24) hint.current.dataset.done = "true";
+    };
+    railEl.addEventListener("scroll", onRailScroll, { passive: true });
 
     const onResize = () => {
-      measure();
-      onScroll();
+      pan = measure();
     };
     window.addEventListener("resize", onResize);
 
     /* ---- Desktop: pinned transform scrub ---- */
     const ctx = gsap.context(() => {
-      if (prefersReducedMotion()) return;
+      if (reduced) return;
 
       const mm = gsap.matchMedia();
       mm.add(DESKTOP, () => {
@@ -141,13 +163,12 @@ export default function Work() {
             },
           },
         });
-        /* A leftover transform would offset the CSS/native path if the
-           viewport later crosses back under 1024px. */
+        /* A leftover transform would offset the touch path if the viewport
+           later crosses back under 1024px. */
         return () => {
           tween.scrollTrigger?.kill();
           gsap.set(trackEl, { clearProps: "transform" });
-          if (setBar) setBar(0.001);
-          writeCounter(0);
+          current = 0;
         };
       });
 
@@ -155,15 +176,14 @@ export default function Work() {
     }, root);
 
     /* Track width depends on images having laid out; re-measure once they're
-       in so neither the pan distance nor the pin is short on a cold load. */
+       in so the pan distance and the pin aren't short on a cold load. */
     const waiting = Array.from(trackEl.querySelectorAll("img")).filter((i) => !i.complete);
     let pending = waiting.length;
     const onLoad = () => {
       pending -= 1;
       if (pending <= 0) {
-        measure();
+        pan = measure();
         ScrollTrigger.refresh();
-        onScroll();
       }
     };
     waiting.forEach((i) => {
@@ -172,8 +192,9 @@ export default function Work() {
     });
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      railEl.removeEventListener("scroll", onScroll);
+      stop();
+      io?.disconnect();
+      railEl.removeEventListener("scroll", onRailScroll);
       window.removeEventListener("resize", onResize);
       waiting.forEach((i) => {
         i.removeEventListener("load", onLoad);
@@ -191,8 +212,8 @@ export default function Work() {
        does the real horizontal clipping anyway. */
     <section id="work" ref={root} className="work-strip relative grain overflow-x-clip bg-ink">
       <div className="work-stage flex h-[100svh] flex-col justify-center">
-        {/* Rail — CSS-panned or natively scrollable on touch, transform-driven
-            from lg up. */}
+        {/* Rail — lerp-panned on touch, transform-driven from lg up, natively
+            swipeable only under reduced motion. */}
         <div ref={rail} className="swipe-rail">
           <div
             ref={track}
@@ -210,8 +231,9 @@ export default function Work() {
                 Roofs, kitchens, baths and everything between — the street keeps going.
               </p>
 
-              {/* Only shown on the fallback path, where the strip really does
-                  need a finger. CSS hides it wherever the pan is automatic. */}
+              {/* Swipe affordance for the reduced-motion fallback, where the
+                  strip really does need a finger. Hidden wherever the pan is
+                  automatic. */}
               <p
                 ref={hint}
                 data-hint
@@ -278,8 +300,8 @@ export default function Work() {
           </div>
         </div>
 
-        {/* Progress instrument — CSS drives the bar off the same timeline as
-            the strip on touch, GSAP drives it on desktop. */}
+        {/* Progress instrument — fed by the lerp on touch, by the pin on
+            desktop, by rail scroll under reduced motion. */}
         <div className="container-x mt-10 flex items-center gap-5 lg:mt-12 lg:gap-6">
           <span ref={counter} className="font-display text-[0.8rem] text-cream/70 tabular-nums">
             01

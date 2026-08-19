@@ -270,83 +270,46 @@
 /* ------------------------------------------------------------------
    Work strip on touch: scroll down, strip pans right — by itself.
 
-   This is the same effect the desktop pin gives, but built so a phone can
-   actually run it. The earlier JS version read scrollY and wrote a transform,
-   which stutters on iOS by construction: scrolling happens on the compositor
-   thread while JS is throttled on the main thread during momentum, so the
-   transform always lands late.
+   Layout does the pinning, JS only eases a transform. The section is taller
+   than a screen, the stage inside it is `position: sticky` (native, handled
+   by the compositor on every phone browser), and a rAF loop in Work.jsx
+   lerps the track toward the scroll-derived target. The lerp is the part
+   that makes it smooth on iOS: scroll positions arrive in bursts during
+   momentum, but the easing fills the gaps, so motion never snaps.
 
-   Here the browser owns the whole thing. `view-timeline` makes the section's
-   own progress through the viewport the animation's clock, and the pan is a
-   plain keyframe animation against it — evaluated on the compositor, never
-   touching the main thread. Sticky positioning does the pinning natively.
+   An earlier version used CSS scroll-driven animations here — beautiful in
+   Chrome, but Safari's support can't be relied on and can't be emulated from
+   this machine, and this section has failed on a real iPhone too many times
+   to ship another cross-fingers implementation. Sticky + lerp is boring and
+   works everywhere.
 
-   --pan is the only measured value (track width minus viewport). JS sets it
-   once and on resize; nothing runs per frame.
-
-   Browsers without scroll-driven animations fall through to the native
-   horizontal swipe defined above, which is a fine experience, just manual.
-   ------------------------------------------------------------------ */
-@supports (animation-timeline: view()) {
-  @media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) {
-    /* Tall enough to give the pan somewhere to happen. 0.8 rather than 1:1 —
-       slightly quicker than the finger without feeling twitchy. */
-    .work-strip {
-      height: calc(100svh + var(--pan, 0px) * 0.8);
-      view-timeline-name: --work-strip;
-      view-timeline-axis: block;
-    }
-
-    .work-stage {
-      position: sticky;
-      top: 0;
-    }
-
-    /* The browser drives the track now, so its own scrolling must be off or
-       the two compete for the same gesture. */
-    .work-strip .swipe-rail {
-      overflow-x: hidden;
-      scroll-snap-type: none;
-    }
-
-    .work-track {
-      animation: work-pan linear both;
-      animation-timeline: --work-strip;
-      /* `contain` spans exactly the window where the section fully covers the
-         viewport — which is precisely when the sticky stage is pinned. */
-      animation-range: contain 0% contain 100%;
-      will-change: transform;
-    }
-
-    /* Same clock drives the progress bar, so it can't drift from the strip. */
-    .work-bar {
-      animation: work-bar linear both;
-      animation-timeline: --work-strip;
-      animation-range: contain 0% contain 100%;
-    }
-
-    /* Nothing to swipe when it pans on its own. */
-    .work-strip [data-hint] {
-      display: none;
-    }
+   --pan is the measured travel (track width minus viewport), set by JS once
+   and on resize. 0.8 makes the pan slightly quicker than the finger without
+   feeling twitchy. */
+@media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) {
+  .work-strip {
+    height: calc(100svh + var(--pan, 0px) * 0.8);
   }
-}
 
-@keyframes work-pan {
-  from {
-    transform: translateX(0);
+  .work-stage {
+    position: sticky;
+    top: 0;
   }
-  to {
-    transform: translateX(calc(-1 * var(--pan, 0px)));
-  }
-}
 
-@keyframes work-bar {
-  from {
-    transform: scaleX(0);
+  /* The pan owns the sideways motion, so the rail's own scrolling must be
+     off or the two compete for the same gesture. */
+  .work-strip .swipe-rail {
+    overflow-x: hidden;
+    scroll-snap-type: none;
   }
-  to {
-    transform: scaleX(1);
+
+  .work-strip .work-track {
+    will-change: transform;
+  }
+
+  /* Nothing to swipe when it pans on its own. */
+  .work-strip [data-hint] {
+    display: none;
   }
 }
 
