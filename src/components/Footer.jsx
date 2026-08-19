@@ -181,7 +181,7 @@ export default function Footer() {
       {/* ---- Legal ---- */}
       <div className="container-x flex flex-col items-center justify-between gap-3 border-t border-white/10 py-6 text-[0.7rem] text-cream/35 sm:flex-row">
         <p>
-          © {new Date().getFullYear()} {BUSINESS.legalName}. All rights reserved.
+          © {new Date().getFullYear()} {BUSINESS.legalName} All rights reserved.
         </p>
         <p>
           {BUSINESS.city}, {BUSINESS.state} · Licensed &amp; insured
