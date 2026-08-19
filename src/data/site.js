@@ -317,7 +317,7 @@ export const SERVICE_AREA = {
 export const CREDIT = {
   studio: "Luxe Web Studio LLC",
   line: "Like this website?",
-  blurb: "Luxe Web Studio designs and builds sites like this one for local businesses.",
+  blurb: "Luxe Web Studio designs and builds sites like this one.",
   cta: "Start a conversation",
   email: "devin.a.brown@icloud.com",
 };

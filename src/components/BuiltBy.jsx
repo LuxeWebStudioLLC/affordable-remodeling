@@ -31,17 +31,17 @@ export default function BuiltBy() {
       <div
         role="dialog"
         aria-label={`About ${CREDIT.studio}`}
-        className={`absolute bottom-full left-1/2 z-40 mb-3 w-64 origin-bottom -translate-x-1/2 border border-white/12 bg-ink-2 p-5 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.7)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] sm:left-auto sm:right-0 sm:translate-x-0 sm:origin-bottom-right ${
+        className={`absolute bottom-full left-1/2 z-40 mb-3 w-52 origin-bottom -translate-x-1/2 border border-white/10 bg-ink-2 p-4 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.7)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] sm:left-auto sm:right-0 sm:translate-x-0 sm:origin-bottom-right ${
           open
             ? "translate-y-0 scale-100 opacity-100"
             : "pointer-events-none translate-y-2 scale-[0.96] opacity-0"
         }`}
       >
-        <p className="script text-[1.15rem] leading-snug text-blue-lt">{CREDIT.line}</p>
-        <p className="mt-2.5 text-[0.78rem] leading-relaxed text-cream/60">{CREDIT.blurb}</p>
+        <p className="script text-[1rem] leading-snug text-blue-lt">{CREDIT.line}</p>
+        <p className="mt-2 text-[0.72rem] leading-relaxed text-cream/55">{CREDIT.blurb}</p>
         <a
           href={`mailto:${CREDIT.email}?subject=${encodeURIComponent("Website inquiry — saw the Affordable Remodeling site")}`}
-          className="link-line mt-4 inline-block text-[0.72rem] font-semibold tracking-[0.1em] text-cream uppercase"
+          className="link-line mt-3.5 inline-block text-[0.62rem] font-semibold tracking-[0.12em] text-cream/90 uppercase"
         >
           {CREDIT.cta} →
         </a>
@@ -52,8 +52,8 @@ export default function BuiltBy() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className={`text-[0.7rem] transition-colors duration-500 ${
-          open ? "text-cream/70" : "text-cream/25 hover:text-cream/60"
+        className={`text-[0.62rem] transition-colors duration-500 ${
+          open ? "text-cream/60" : "text-cream/20 hover:text-cream/50"
         }`}
       >
         Site by {CREDIT.studio}
