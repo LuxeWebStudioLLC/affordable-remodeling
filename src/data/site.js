@@ -309,6 +309,19 @@ export const SERVICE_AREA = {
   ],
 };
 
+/**
+ * Studio credit in the footer. ⚠️ CONTACT PLACEHOLDER: this email is the
+ * site owner's personal address — swap in the studio's real email (or a
+ * portfolio URL) before launch if you have one.
+ */
+export const CREDIT = {
+  studio: "Luxe Web Studio LLC",
+  line: "Like this website?",
+  blurb: "Luxe Web Studio designs and builds sites like this one for local businesses.",
+  cta: "Start a conversation",
+  email: "devin.a.brown@icloud.com",
+};
+
 export const FAQS = [
   {
     q: "What areas do you serve?",

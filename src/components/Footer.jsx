@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { gsap, ScrollTrigger, prefersReducedMotion, scrollToSection } from "../lib/gsap";
 import { revealHeadline, revealUp } from "../lib/animations";
 import { BUSINESS, NAV_LINKS, SERVICES } from "../data/site";
+import BuiltBy from "./BuiltBy";
 
 export default function Footer() {
   const root = useRef(null);
@@ -185,6 +186,7 @@ export default function Footer() {
         <p>
           {BUSINESS.city}, {BUSINESS.state} · Licensed &amp; insured
         </p>
+        <BuiltBy />
       </div>
     </footer>
   );
