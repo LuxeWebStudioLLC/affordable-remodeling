@@ -74,7 +74,7 @@ export default function About() {
                   <p
                     data-count={/\d/.test(s.value) ? "" : undefined}
                     data-value={s.value}
-                    className="font-display text-[1.75rem] leading-none text-blue-lt md:text-[2.1rem]"
+                    className="font-accent text-[2rem] leading-none font-medium text-blue-lt md:text-[2.5rem]"
                   >
                     {s.value}
                   </p>

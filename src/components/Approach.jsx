@@ -54,7 +54,7 @@ export default function Approach() {
 
           {/* Floating stat card, offset over the image edge */}
           <div className="absolute -right-2 bottom-6 bg-ink px-6 py-5 text-cream shadow-[0_24px_60px_-20px_rgba(11,16,20,0.55)] sm:-right-4 sm:bottom-8 md:px-8 md:py-6">
-            <p className="font-display text-[2.1rem] leading-none text-blue-lt md:text-[2.6rem]">
+            <p className="font-accent text-[2.4rem] leading-none font-medium text-blue-lt md:text-[3rem]">
               {BUSINESS.yearsInBusiness}
             </p>
             <p className="eyebrow mt-2 text-cream/50">Years in La Crosse</p>

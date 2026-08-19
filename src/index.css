@@ -43,7 +43,11 @@
 
   --font-display: "Sora", system-ui, sans-serif;
   --font-accent: "Fraunces", Georgia, serif;
-  --font-sans: "DM Sans", system-ui, sans-serif;
+  /* Hanken Grotesk over DM Sans: same humanist register, but the drawn
+     details (the g, the numerals, the tighter apertures) read editorial
+     instead of template. The body face is most of the page — it is the
+     single cheapest premium upgrade available. */
+  --font-sans: "Hanken Grotesk", system-ui, sans-serif;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }

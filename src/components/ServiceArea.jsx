@@ -7,7 +7,9 @@ import SectionHeading from "./SectionHeading";
 /**
  * Hand-drawn service-area instrument. No map tiles, no Google — concentric
  * distance rings centred on La Crosse with real towns plotted by bearing and
- * distance, drawn like a surveyor's radar. Everything animates once on entry
+ * distance, drawn like a plate from an old county atlas: the Mississippi
+ * running through it, cardinal points on the bezel, ring distances in serif
+ * italic, and a figure caption underneath. Everything animates once on entry
  * (no scrub, transforms/attributes only) so it stays smooth.
  */
 
@@ -36,6 +38,27 @@ const TICKS = Array.from({ length: 72 }, (_, i) => {
   };
 });
 
+/** Cardinal letters sit just past the major ticks. */
+const CARDINALS = [
+  { label: "N", bearing: 0 },
+  { label: "E", bearing: 90 },
+  { label: "S", bearing: 180 },
+  { label: "W", bearing: 270 },
+].map((c) => {
+  const a = rad(c.bearing);
+  const r = MAX_R + 34;
+  return { ...c, x: C + Math.cos(a) * r, y: C + Math.sin(a) * r + 4 };
+});
+
+/* The Mississippi, as a lazy meander entering NNW and leaving SSE — it runs
+   right past downtown La Crosse, slightly to the west. Purely illustrative,
+   like everything else on the plate, but it anchors the drawing to the real
+   geography at a glance. */
+const RIVER_D = `M 183 60
+  C 225 140, 262 200, 282 265
+  S 284 350, 296 415
+  S 300 505, 312 552`;
+
 export default function ServiceArea() {
   const root = useRef(null);
   const svg = useRef(null);
@@ -56,7 +79,8 @@ export default function ServiceArea() {
       const rings = el.querySelectorAll("[data-ring]");
       const ticks = el.querySelectorAll("[data-tick]");
       const dots = el.querySelectorAll("[data-dot]");
-      const labels = el.querySelectorAll("[data-town-label], [data-ring-label]");
+      const labels = el.querySelectorAll("[data-town-label], [data-ring-label], [data-cardinal]");
+      const river = el.querySelector("[data-river]");
 
       const tl = gsap.timeline({
         scrollTrigger: { trigger: el, start: "top 80%", once: true },
@@ -70,13 +94,24 @@ export default function ServiceArea() {
         duration: 1.5,
         stagger: 0.14,
       })
-        .from(ticks, { opacity: 0, duration: 0.5, stagger: 0.008 }, 0.3)
-        .from(
-          dots,
-          { attr: { r: 0 }, opacity: 0, duration: 0.7, stagger: 0.045 },
-          0.7,
-        )
-        .from(labels, { opacity: 0, duration: 0.8, stagger: 0.03 }, 1.0);
+        .from(ticks, { opacity: 0, duration: 0.5, stagger: 0.008 }, 0.3);
+
+      /* The river draws itself in, source to mouth. */
+      if (river) {
+        const len = river.getTotalLength();
+        tl.fromTo(
+          river,
+          { strokeDasharray: len, strokeDashoffset: len },
+          { strokeDashoffset: 0, duration: 2.2, ease: "power2.inOut" },
+          0.5,
+        );
+      }
+
+      tl.from(
+        dots,
+        { attr: { r: 0 }, opacity: 0, duration: 0.7, stagger: 0.045 },
+        0.9,
+      ).from(labels, { opacity: 0, duration: 0.8, stagger: 0.03 }, 1.2);
 
       /* Radar ping on HQ — slow, quiet, forever. */
       el.querySelectorAll("[data-ping]").forEach((ping, i) => {
@@ -166,6 +201,20 @@ export default function ServiceArea() {
             role="img"
             aria-label={`Service area map: ${SERVICE_AREA.radiusMiles} miles around La Crosse, covering towns on both sides of the Mississippi.`}
           >
+            <defs>
+              {/* A whisper of atmosphere so the plate sits IN the page rather
+                  than on it. */}
+              <radialGradient id="sa-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="rgba(10,106,166,0.14)" />
+                <stop offset="55%" stopColor="rgba(10,106,166,0.05)" />
+                <stop offset="100%" stopColor="rgba(10,106,166,0)" />
+              </radialGradient>
+              {/* Invisible path the river's label rides along. */}
+              <path id="sa-river-label" d="M 236 250 C 258 300, 262 340, 280 405" fill="none" />
+            </defs>
+
+            <circle data-ring cx={C} cy={C} r={MAX_R} fill="url(#sa-glow)" stroke="none" />
+
             {/* bezel ticks */}
             {TICKS.map((t, i) => (
               <line
@@ -175,6 +224,20 @@ export default function ServiceArea() {
                 stroke={t.major ? "rgba(247,244,238,0.35)" : "rgba(247,244,238,0.14)"}
                 strokeWidth={t.major ? 1.5 : 1}
               />
+            ))}
+
+            {/* cardinal points, set in the serif like a compass card */}
+            {CARDINALS.map((c) => (
+              <text
+                key={c.label}
+                data-cardinal
+                x={c.x} y={c.y}
+                textAnchor="middle"
+                className="fill-cream/45"
+                style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 15, fontStyle: "italic", fontWeight: 500 }}
+              >
+                {c.label}
+              </text>
             ))}
 
             {/* distance rings */}
@@ -190,15 +253,34 @@ export default function ServiceArea() {
                 />
                 <text
                   data-ring-label
-                  x={C - mi * PX_PER_MILE + 4} y={C - 8}
+                  x={C - mi * PX_PER_MILE + 6} y={C - 9}
                   textAnchor="start"
-                  className="fill-cream/30"
-                  style={{ fontSize: 11, letterSpacing: "0.22em", fontWeight: 700 }}
+                  className="fill-cream/40"
+                  style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 13, fontStyle: "italic", fontWeight: 500, letterSpacing: "0.04em" }}
                 >
-                  {mi} MI
+                  {mi} mi
                 </text>
               </g>
             ))}
+
+            {/* the Mississippi */}
+            <path
+              data-river
+              d={RIVER_D}
+              fill="none"
+              stroke="rgba(85,163,214,0.28)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <text
+              data-ring-label
+              className="fill-cream/30"
+              style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 11.5, fontStyle: "italic", letterSpacing: "0.14em" }}
+            >
+              <textPath href="#sa-river-label" startOffset="8%">
+                Mississippi River
+              </textPath>
+            </text>
 
             {/* crosshair */}
             <line data-tick x1={C - 14} y1={C} x2={C + 14} y2={C} stroke="rgba(247,244,238,0.25)" strokeWidth="1" />
@@ -219,15 +301,24 @@ export default function ServiceArea() {
               const labelled = t.miles >= 14;
               return (
                 <g key={t.name}>
+                  {t.major && (
+                    <circle
+                      data-dot
+                      cx={p.x} cy={p.y} r="7.5"
+                      fill="none"
+                      stroke="rgba(85,163,214,0.35)"
+                      strokeWidth="1"
+                    />
+                  )}
                   <circle data-dot cx={p.x} cy={p.y} r="3.4" className="fill-blue-lt" opacity="0.9" />
                   {labelled && (
                     <text
                       data-town-label
-                      x={p.x + (east ? 9 : -9)}
+                      x={p.x + (east ? 12 : -12)}
                       y={p.y + 4}
                       textAnchor={east ? "start" : "end"}
                       className={t.major ? "fill-cream/75" : "hidden fill-cream/45 md:inline"}
-                      style={{ fontSize: 12.5 }}
+                      style={{ fontSize: 12.5, letterSpacing: "0.02em" }}
                     >
                       {t.name}
                     </text>
@@ -242,14 +333,27 @@ export default function ServiceArea() {
             <circle data-dot cx={C} cy={C} r="6" className="fill-copper" />
             <text
               data-town-label
-              x={C} y={C + 26}
+              x={C} y={C + 27}
               textAnchor="middle"
               className="fill-cream"
-              style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.14em" }}
+              style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.16em" }}
             >
               LA CROSSE — HQ
             </text>
           </svg>
+
+          {/* Figure caption, like a plate in a printed atlas. */}
+          <div data-map className="mt-6 flex items-baseline justify-between border-t border-white/10 pt-4">
+            <p className="text-[0.68rem] tracking-[0.18em] text-cream/35 uppercase">
+              Fig. 01 — Service radius
+            </p>
+            <p
+              className="text-[0.8rem] text-cream/45"
+              style={{ fontFamily: "Fraunces, Georgia, serif", fontStyle: "italic" }}
+            >
+              surveyed from La Crosse, Wis.
+            </p>
+          </div>
         </div>
       </div>
     </section>
