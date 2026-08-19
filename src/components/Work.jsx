@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { gsap, ScrollTrigger, prefersReducedMotion, scrollToSection } from "../lib/gsap";
+import { responsive } from "../lib/img";
 import { WORK } from "../data/site";
 
 /**
@@ -153,6 +154,7 @@ export default function Work() {
                   >
                     <img
                       src={w.src}
+                      {...responsive(w.src, "(min-width: 1024px) 42vw, 64vw")}
                       alt={w.alt}
                       loading={i < 2 ? "eager" : "lazy"}
                       decoding="async"

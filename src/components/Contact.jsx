@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap, EASE, prefersReducedMotion } from "../lib/gsap";
+import { responsive } from "../lib/img";
 import { revealUp } from "../lib/animations";
 import { BUDGETS, BUSINESS, PROJECT_TYPES, TIMELINES } from "../data/site";
 import SectionHeading from "./SectionHeading";
@@ -135,7 +136,14 @@ export default function Contact() {
     <section id="contact" ref={root} className="relative grain overflow-hidden bg-navy py-24 md:py-32 lg:py-40">
       {/* Faint background photo so the panel has depth */}
       <div className="pointer-events-none absolute inset-0 -z-0 opacity-[0.14]">
-        <img src="/images/cta-dusk.jpg" alt="" className="h-full w-full object-cover" loading="lazy" />
+        <img
+          src="/images/cta-dusk.jpg"
+          {...responsive("/images/cta-dusk.jpg", "100vw")}
+          alt=""
+          className="h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy/85 to-navy" />
       </div>
 

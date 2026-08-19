@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap, ScrollTrigger, SplitText, EASE, prefersReducedMotion, scrollToSection } from "../lib/gsap";
+import { responsive } from "../lib/img";
 import { BUSINESS } from "../data/site";
 
 /**
@@ -210,6 +211,7 @@ export default function Hero({ ready }) {
             only runs when the video isn't — otherwise two motions fight. */}
         <img
           src="/images/hero-home.jpg"
+          {...responsive("/images/hero-home.jpg", "100vw")}
           alt="Remodeled home at dusk with warm lit windows"
           className={`h-[112%] w-full object-cover object-[50%_62%] sm:object-center ${
             ready && !videoSrc ? "kenburns" : ""

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { gsap, EASE, prefersReducedMotion, scrollToSection } from "../lib/gsap";
+import { responsive } from "../lib/img";
 import { revealUp } from "../lib/animations";
 
 /**
@@ -104,6 +105,7 @@ export default function Transformation() {
               >
                 <img
                   src={f.src}
+                  {...responsive(f.src, "(min-width: 768px) 46vw, 92vw")}
                   alt={f.alt}
                   loading="lazy"
                   decoding="async"
