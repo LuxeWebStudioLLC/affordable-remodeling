@@ -4,10 +4,22 @@ import { responsive } from "../lib/img";
 import { WORK } from "../data/site";
 
 /**
- * The gallery as a horizontal editorial strip. The section pins and vertical
- * scroll drives the track sideways — on every screen size, phones included,
- * so the signature move isn't a desktop-only privilege. Mixed image widths
- * and offsets make it read like a magazine spread rather than a grid.
+ * The gallery as a horizontal editorial strip — driven two different ways,
+ * because the two input types have genuinely different physics.
+ *
+ * DESKTOP (≥1024px): the section pins and vertical scroll drives the track
+ * sideways by transform. A mouse wheel produces a steady main-thread signal
+ * and ScrollSmoother smooths it further, so this feels silky.
+ *
+ * TOUCH: native horizontal scrolling. No pin, no transform, no JS in the
+ * gesture at all. Earlier versions transformed the track from scrollY here
+ * too, and it was visibly bumpy no matter how much cost was removed — because
+ * iOS scrolls on the compositor thread and throttles main-thread JS during
+ * momentum, so the transform can only ever arrive late and in bursts. Handing
+ * the gesture to the browser is not a downgrade; it is the only way to get a
+ * guaranteed-smooth 60fps on a phone.
+ *
+ * The progress instrument reads whichever source is active.
  *
  * Deliberately nothing inside the track is scroll-revealed: content in a
  * pinned scrub must be visible by default or the pin and the reveals fight.
@@ -20,112 +32,119 @@ const LAYOUT = [
   [28, false], [36, true], [27, false],
 ];
 
+const DESKTOP = "(min-width: 1024px)";
+
 export default function Work() {
   const root = useRef(null);
+  const rail = useRef(null);
   const track = useRef(null);
   const bar = useRef(null);
   const counter = useRef(null);
+  const hint = useRef(null);
 
   useEffect(() => {
+    const railEl = rail.current;
+    const trackEl = track.current;
+    if (!railEl || !trackEl) return;
+
+    /* One writer for the instrument, whichever source drives it. */
+    const setBar = bar.current ? gsap.quickSetter(bar.current, "scaleX") : null;
+    const report = (progress) => {
+      const p = Math.min(1, Math.max(0, progress));
+      if (setBar) setBar(Math.max(0.001, p));
+      if (counter.current) {
+        const n = Math.min(WORK.length, Math.round(p * (WORK.length - 1)) + 1);
+        counter.current.textContent = String(n).padStart(2, "0");
+      }
+    };
+
+    /* ---- Touch: native scroll. Works with reduced motion too, since
+            nothing here is an animation. ---- */
+    let hinted = false;
+    const onRailScroll = () => {
+      const max = railEl.scrollWidth - railEl.clientWidth;
+      report(max > 0 ? railEl.scrollLeft / max : 0);
+
+      /* Retire the swipe hint the moment they've understood it. */
+      if (!hinted && railEl.scrollLeft > 24) {
+        hinted = true;
+        if (hint.current) hint.current.dataset.done = "true";
+      }
+    };
+    railEl.addEventListener("scroll", onRailScroll, { passive: true });
+
+    /* ---- Desktop: pinned transform scrub ---- */
     const ctx = gsap.context(() => {
       if (prefersReducedMotion()) return;
 
-      const el = track.current;
-      if (!el) return;
-
-      const dist = () => Math.max(0, el.scrollWidth - window.innerWidth);
-
-      const setBar = bar.current ? gsap.quickSetter(bar.current, "scaleX") : null;
-
-      const onUpdate = (self) => {
-        if (setBar) setBar(Math.max(0.001, self.progress));
-        if (counter.current) {
-          const n = Math.min(
-            WORK.length,
-            Math.round(self.progress * (WORK.length - 1)) + 1,
-          );
-          counter.current.textContent = String(n).padStart(2, "0");
-        }
-      };
-
-      /* Touch and pointer want different tuning, so each gets its own build
-         instead of one compromise that suits neither:
-
-         ratio — how much vertical scroll the strip costs. 1:1 is right for a
-           pointer. Phones get 0.72, not the old 0.5: at 0.5 the strip moved
-           at double finger speed, which reads as twitchy rather than fast.
-
-         scrub — desktop keeps the 1s lerp because ScrollSmoother already
-           hands it a smoothed signal. Touch takes the value straight:
-           momentum scrolling IS the smoothing, and stacking a second lerp on
-           top of it is what shows up as lag and stutter.
-
-         anticipatePin — earns its keep against a fast mouse wheel, but causes
-           a visible hop when a pin engages under a finger, so touch opts out. */
-      const CONFIG = {
-        "(min-width: 1024px)": { ratio: 1, scrub: 1, anticipatePin: 1 },
-        "(max-width: 1023.98px)": { ratio: 0.72, scrub: true, anticipatePin: 0 },
-      };
-
+      const dist = () => Math.max(0, trackEl.scrollWidth - railEl.clientWidth);
       const mm = gsap.matchMedia();
 
-      Object.entries(CONFIG).forEach(([query, cfg]) => {
-        mm.add(query, () => {
-          const tween = gsap.to(el, {
-            x: () => -dist(),
-            ease: "none",
-            force3D: true,
-            scrollTrigger: {
-              trigger: root.current,
-              start: "top top",
-              end: () => "+=" + Math.round(dist() * cfg.ratio),
-              pin: true,
-              scrub: cfg.scrub,
-              anticipatePin: cfg.anticipatePin,
-              invalidateOnRefresh: true,
-              onUpdate,
-            },
-          });
-          return () => tween.scrollTrigger?.kill();
+      mm.add(DESKTOP, () => {
+        const tween = gsap.to(trackEl, {
+          x: () => -dist(),
+          ease: "none",
+          force3D: true,
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top top",
+            end: () => "+=" + Math.round(dist()),
+            pin: true,
+            scrub: 1,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => report(self.progress),
+          },
         });
+        /* Leaving a transform behind would offset the native scroller if the
+           viewport later crosses back under 1024px. */
+        return () => {
+          tween.scrollTrigger?.kill();
+          gsap.set(trackEl, { clearProps: "transform" });
+          report(0);
+        };
       });
-
-      /* The track's width depends on images having laid out; re-measure once
-         they're in so the pin distance isn't short on a cold load. */
-      const imgs = Array.from(el.querySelectorAll("img"));
-      let pending = imgs.filter((i) => !i.complete).length;
-      const onLoad = () => {
-        pending -= 1;
-        if (pending <= 0) ScrollTrigger.refresh();
-      };
-      if (pending > 0) {
-        imgs.filter((i) => !i.complete).forEach((i) => {
-          i.addEventListener("load", onLoad, { once: true });
-          i.addEventListener("error", onLoad, { once: true });
-        });
-      }
 
       return () => mm.revert();
     }, root);
 
-    return () => ctx.revert();
+    /* The track's width depends on images having laid out; re-measure once
+       they're in so the pin distance isn't short on a cold load. */
+    const imgs = Array.from(trackEl.querySelectorAll("img"));
+    const waiting = imgs.filter((i) => !i.complete);
+    let pending = waiting.length;
+    const onLoad = () => {
+      pending -= 1;
+      if (pending <= 0) {
+        ScrollTrigger.refresh();
+        onRailScroll();
+      }
+    };
+    waiting.forEach((i) => {
+      i.addEventListener("load", onLoad, { once: true });
+      i.addEventListener("error", onLoad, { once: true });
+    });
+
+    return () => {
+      railEl.removeEventListener("scroll", onRailScroll);
+      waiting.forEach((i) => {
+        i.removeEventListener("load", onLoad);
+        i.removeEventListener("error", onLoad);
+      });
+      ctx.revert();
+    };
   }, []);
 
   return (
     <section id="work" ref={root} className="relative grain overflow-hidden bg-ink">
       <div className="flex h-[100svh] flex-col justify-center">
-        {/* Rail — transform-driven at every size; never natively scrollable,
-            or the browser and the scrub would both try to move it.
-            `contain: paint` keeps repaints inside the rail instead of letting
-            them invalidate the whole section on every frame. */}
-        <div className="overflow-hidden [contain:paint]">
+        {/* Rail — native scroller on touch, transform-driven from lg up. */}
+        <div ref={rail} className="swipe-rail">
           <div
             ref={track}
-            /* GPU promotion at EVERY size. This was `lg:will-change-transform`,
-               so phones — the devices that can least afford it — were
-               compositing six full-bleed photos on the CPU every frame. That
-               was the bulk of the reported bumpiness. */
-            className="flex w-max transform-gpu items-center gap-[5vw] px-[6vw] will-change-transform lg:gap-[3.5vw]"
+            /* will-change only where a transform actually runs. On touch the
+               browser composites its own scroll and the hint is wasted. */
+            className="flex w-max items-center gap-[5vw] px-[6vw] lg:gap-[3.5vw] lg:transform-gpu lg:will-change-transform"
           >
             {/* Intro panel rides inside the strip */}
             <div className="w-[70vw] shrink-0 lg:w-[26vw]">
@@ -136,8 +155,20 @@ export default function Work() {
                 <span className="script text-blue-lt">around town.</span>
               </h2>
               <p className="mt-6 max-w-xs text-[0.9rem] leading-[1.8] text-cream/55">
-                Roofs, kitchens, baths and everything between — keep scrolling, the street keeps
-                going.
+                Roofs, kitchens, baths and everything between — the street keeps going.
+              </p>
+
+              {/* Touch affordance: the strip scrolls sideways, which isn't
+                  obvious until you try. Fades out for good on first swipe. */}
+              <p
+                ref={hint}
+                data-hint
+                className="mt-5 flex items-center gap-2 text-[0.7rem] tracking-[0.14em] text-cream/40 uppercase transition-opacity duration-500 data-[done=true]:opacity-0 lg:hidden"
+              >
+                Swipe
+                <span aria-hidden="true" className="swipe-nudge inline-block">
+                  →
+                </span>
               </p>
             </div>
 
@@ -146,7 +177,7 @@ export default function Work() {
               return (
                 <figure
                   key={w.src}
-                  className={`group shrink-0 ${i % 2 ? "lg:self-start lg:pt-[6vh]" : "lg:self-end lg:pb-[6vh]"}`}
+                  className={`group shrink-0 snap-center ${i % 2 ? "lg:self-start lg:pt-[6vh]" : "lg:self-end lg:pb-[6vh]"}`}
                   style={{ "--w": `${vw}vw` }}
                 >
                   <div
@@ -195,8 +226,8 @@ export default function Work() {
           </div>
         </div>
 
-        {/* Progress instrument — scroll drives the strip everywhere, so it shows
-            on phones too. */}
+        {/* Progress instrument — fed by native scroll on touch, by the pin
+            on desktop. */}
         <div className="container-x mt-10 flex items-center gap-5 lg:mt-12 lg:gap-6">
           <span ref={counter} className="font-display text-[0.8rem] text-cream/70 tabular-nums">
             01

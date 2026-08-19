@@ -205,6 +205,64 @@
   }
 }
 
+/* The Work gallery's horizontal track.
+   ------------------------------------------------------------------
+   On phones this is a NATIVE horizontal scroller, and that is the whole
+   point. iOS scrolls on the compositor thread while JS runs on the main
+   thread, and it throttles JS during momentum — so a transform driven from
+   scrollY arrives late and in bursts no matter how cheap you make it. That
+   is unfixable by tuning; the only cure is to stop involving JS in the
+   gesture. Native scrolling never drops a frame because the compositor owns
+   it end to end.
+
+   From 1024px up the browser's own overflow is switched off and GSAP drives
+   the track by transform instead, which is what makes the pinned
+   vertical-scroll-becomes-horizontal move possible with a pointer. */
+@utility swipe-rail {
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Without this, swiping past the first tile triggers iOS's back gesture. */
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Proximity, not mandatory: the intro and outro panels are much wider than
+     the photos, and mandatory snapping between mismatched widths feels grabby. */
+  scroll-snap-type: x proximity;
+
+  /* The strip has its own progress instrument; a raw scrollbar under it is
+     visual noise. */
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    overflow-x: hidden;
+    scroll-snap-type: none;
+  }
+}
+
+/* Small sideways drift on the swipe hint's arrow. Pure CSS, composited, and
+   it costs nothing — it stops the moment the visitor swipes. */
+@keyframes swipe-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+.swipe-nudge {
+  animation: swipe-nudge 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-nudge {
+    animation: none;
+  }
+}
+
 /* ============================================================
    COMPONENT CLASSES
    ============================================================ */
