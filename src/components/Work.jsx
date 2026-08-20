@@ -53,13 +53,31 @@ export default function Work() {
     const isDesktop = () => window.matchMedia(DESKTOP).matches;
     const reduced = prefersReducedMotion();
 
-    /* ---- The one measurement: how far the track has to travel. ---- */
+    /* ---- The one measurement: how far the track has to travel. ----
+       This MUST be re-run whenever the track's width can change, not just
+       once on mount. Measuring only at mount is what broke this section in
+       Safari: the track had not laid out yet, so --pan was written as 0px,
+       which collapsed `height: calc(100svh + var(--pan) * 0.8)` to exactly
+       one screen — no scroll range, no pan, permanently, with no later event
+       to correct it. A ResizeObserver keys off actual layout instead of
+       hoping the timing works out. */
+    let pan = 0;
+    /* Pure: never triggers a refresh. ScrollTrigger calls this from inside
+       its own refresh (via the tween's `end`), and refreshing from there
+       would recurse. Returns true when the value actually moved. */
     const measure = () => {
-      const pan = Math.max(0, trackEl.scrollWidth - railEl.clientWidth);
-      rootEl.style.setProperty("--pan", `${Math.round(pan)}px`);
-      return pan;
+      const next = Math.max(0, trackEl.scrollWidth - railEl.clientWidth);
+      if (next === pan) return false;
+      pan = next;
+      rootEl.style.setProperty("--pan", `${Math.round(next)}px`);
+      return true;
     };
-    let pan = measure();
+
+    /* What observers call: the section's height depends on --pan, so when it
+       moves the pinned geometry has to be re-read — but only then. */
+    const remeasure = () => {
+      if (measure()) ScrollTrigger.refresh();
+    };
 
     const setX = gsap.quickSetter(trackEl, "x", "px");
     const setBar = bar.current ? gsap.quickSetter(bar.current, "scaleX") : null;
@@ -133,10 +151,28 @@ export default function Work() {
     };
     railEl.addEventListener("scroll", onRailScroll, { passive: true });
 
-    const onResize = () => {
-      pan = measure();
-    };
+    /* Re-measure on every layout change of the track or the rail: covers
+       images decoding, webfonts swapping in, orientation changes, and the
+       first paint itself. Observing width-affecting elements only, so the
+       --pan write (which changes the section's HEIGHT) cannot feed back. */
+    let ro = null;
+    if ("ResizeObserver" in window) {
+      ro = new ResizeObserver(remeasure);
+      ro.observe(trackEl);
+      ro.observe(railEl);
+    }
+
+    const onResize = () => remeasure();
     window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+
+    /* Fonts change text widths, which changes the intro/outro panel widths. */
+    if (document.fonts?.ready) document.fonts.ready.then(remeasure).catch(() => {});
+
+    /* Belt and braces for the very first frames, where WebKit can report a
+       zero-width track before it has laid anything out. */
+    remeasure();
+    requestAnimationFrame(remeasure);
 
     /* ---- Desktop: pinned transform scrub ---- */
     const ctx = gsap.context(() => {
@@ -144,7 +180,10 @@ export default function Work() {
 
       const mm = gsap.matchMedia();
       mm.add(DESKTOP, () => {
-        const dist = () => measure();
+        const dist = () => {
+          measure();
+          return pan;
+        };
         const tween = gsap.to(trackEl, {
           x: () => -dist(),
           ease: "none",
@@ -175,28 +214,24 @@ export default function Work() {
       return () => mm.revert();
     }, root);
 
-    /* Track width depends on images having laid out; re-measure once they're
-       in so the pan distance and the pin aren't short on a cold load. */
-    const waiting = Array.from(trackEl.querySelectorAll("img")).filter((i) => !i.complete);
-    let pending = waiting.length;
-    const onLoad = () => {
-      pending -= 1;
-      if (pending <= 0) {
-        pan = measure();
-        ScrollTrigger.refresh();
-      }
-    };
-    waiting.forEach((i) => {
-      i.addEventListener("load", onLoad, { once: true });
-      i.addEventListener("error", onLoad, { once: true });
+    /* Each image landing can widen the track; the ResizeObserver catches the
+       resulting layout change, but listening directly costs nothing and helps
+       browsers that batch observer callbacks. */
+    const imgs = Array.from(trackEl.querySelectorAll("img"));
+    const onLoad = () => remeasure();
+    imgs.forEach((i) => {
+      i.addEventListener("load", onLoad);
+      i.addEventListener("error", onLoad);
     });
 
     return () => {
       stop();
       io?.disconnect();
+      ro?.disconnect();
       railEl.removeEventListener("scroll", onRailScroll);
       window.removeEventListener("resize", onResize);
-      waiting.forEach((i) => {
+      window.removeEventListener("orientationchange", onResize);
+      imgs.forEach((i) => {
         i.removeEventListener("load", onLoad);
         i.removeEventListener("error", onLoad);
       });
