@@ -102,10 +102,18 @@ export default function Work() {
       const top = rootEl.getBoundingClientRect().top;
       const target = span > 0 ? Math.min(1, Math.max(0, -top / span)) : 0;
 
-      /* 0.16/frame: settles in ~0.3s, tight enough to feel attached to the
-         finger, loose enough to swallow bursty scroll updates. */
-      current += (target - current) * 0.16;
-      if (Math.abs(target - current) < 0.0005) current = target;
+      /* NO smoothing. This was lerped at 0.16/frame to paper over iOS's
+         bursty scroll events, and that was the bug users actually felt:
+         measured 243px of lag mid-scroll (62% of a phone's width) plus ~430ms
+         of continued sliding after the finger left the screen. The strip
+         sloshed instead of tracking.
+
+         Smoothing is the wrong tool here. This loop reads scrollY once per
+         animation frame rather than listening for scroll events, so the value
+         is already current on every painted frame — including during iOS
+         momentum, where rAF keeps firing. Writing it straight through welds
+         the strip to the scroll position: zero lag, zero drift. */
+      current = target;
 
       setX(-current * pan);
       if (setBar) setBar(Math.max(0.001, current));
