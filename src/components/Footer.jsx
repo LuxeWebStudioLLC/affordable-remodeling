@@ -49,8 +49,8 @@ export default function Footer() {
           data-cta-h
           className="mx-auto mt-6 max-w-5xl text-[clamp(2.5rem,8vw,6.4rem)] opacity-0"
         >
-          Let's make your house
-          <span className="script block text-blue-lt">feel new again.</span>
+          Tell us what the
+          <span className="script block text-blue-lt">house needs.</span>
         </h2>
 
         <div data-f className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -62,7 +62,7 @@ export default function Footer() {
             }}
             className="btn btn-blue w-full sm:w-auto"
           >
-            Get a free estimate
+            Request an estimate
           </a>
           <a href={BUSINESS.phoneHref} className="btn btn-outline-light w-full sm:w-auto">
             Call {BUSINESS.phone}

@@ -28,8 +28,8 @@ export default function About() {
           <div>
             <SectionHeading
               eyebrow={`About ${BUSINESS.name}`}
-              line1="Roofs, kitchens,"
-              line2="and everything between."
+              line1="One contractor for"
+              line2="the whole house."
               tone="light"
             />
 
@@ -52,9 +52,9 @@ export default function About() {
               </p>
               <p className="text-[0.95rem] leading-[1.85] text-cream/60">
                 We specialize in roofing, siding, windows, kitchen and bathroom renovations, decks
-                and additions — the full exterior and interior of a house under one contractor. Our
-                whole approach comes down to three things: quality craftsmanship, dependable
-                service, and beautiful results that fit your vision and your budget.
+                and additions — the full exterior and interior of a house under one contractor. That
+                matters more than it sounds: when the roof, the siding and the windows are all one
+                company's responsibility, there is nobody left to point at when water gets in.
               </p>
               <p className="text-[0.95rem] leading-[1.85] text-cream/60">
                 We work throughout {BUSINESS.city}, {BUSINESS.state} and the surrounding areas up to

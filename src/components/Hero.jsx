@@ -278,9 +278,9 @@ export default function Hero({ ready }) {
           data-hero-title
           className="mt-6 max-w-4xl text-[clamp(2.5rem,6.2vw,5.4rem)] leading-[1.05] text-white opacity-0 sm:mt-8"
         >
-          The house you have,
+          Remodeling in La Crosse,
           <br />
-          <span className="script text-blue-lt">the home you want.</span>
+          <span className="script text-blue-lt">done properly.</span>
         </h1>
 
         <p
@@ -288,8 +288,9 @@ export default function Hero({ ready }) {
           data-hero-sub
           className="mt-6 max-w-xl text-[0.95rem] leading-[1.8] text-white/70 md:text-[1.05rem]"
         >
-          Roofing, siding, kitchens and baths across La Crosse — family-owned for
-          twenty-five years, with a lifetime warranty on every roof.
+          Twenty-five years of roofing, siding, windows and interior work across
+          western Wisconsin — one crew, one standard, and a lifetime warranty on
+          every roof we lay.
         </p>
 
         <div className="mt-7 flex w-full flex-col items-center gap-2.5 sm:w-auto sm:flex-row sm:gap-4">

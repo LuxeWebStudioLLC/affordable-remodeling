@@ -72,8 +72,8 @@ export default function Transformation() {
             </h2>
           </div>
           <p data-t className="max-w-xs text-[0.85rem] leading-relaxed text-cream/55">
-            New siding, trim and deck on a farmhouse outside La Crosse. Same pines, same roofline —
-            everything else is new.
+            New siding, trim and deck on a farmhouse outside La Crosse. Same pines, same roofline.
+            Everything else we replaced.
           </p>
         </div>
 
@@ -130,10 +130,10 @@ export default function Transformation() {
             }}
             className="btn btn-cream"
           >
-            Get a free estimate
+            Request an estimate
           </a>
           <span className="text-[0.8rem] text-cream/45">
-            Wondering what yours could look like? That's the free part.
+            Estimates are free and we will walk the property before quoting.
           </span>
         </div>
       </div>

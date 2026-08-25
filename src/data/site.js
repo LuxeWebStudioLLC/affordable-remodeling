@@ -7,7 +7,7 @@
 export const BUSINESS = {
   name: "Affordable Home Remodeling",
   legalName: "Affordable Home Remodeling Corp.",
-  tagline: "Unleash Your Home's True Potential",
+  tagline: "Family owned · La Crosse, Wisconsin",
   city: "La Crosse",
   state: "WI",
   phone: "(608) 844-8482",
@@ -55,7 +55,7 @@ export const SERVICES = [
     title: "Roofing",
     tag: "Lifetime warranty",
     blurb:
-      "Roofing solutions that provide durability, protection, and style for your home.",
+      "Tear-off, deck inspection, ice and water shield, ventilation. The layers you never see are the ones that decide how long it lasts.",
     detail:
       "Asphalt shingles and standing seam metal, installed by a crew that has been doing it for over 25 years. Tear-off, deck inspection, ice and water shield, and proper ventilation — every layer done right. We also offer a lifetime warranty.",
     points: ["Asphalt shingles", "Metal roofing", "Lifetime warranty"],
@@ -65,7 +65,7 @@ export const SERVICES = [
     title: "Siding",
     tag: "Vinyl · Fiber cement · Wood",
     blurb:
-      "Premium siding that lifts your home's exterior while improving energy efficiency.",
+      "Vinyl, fiber cement and wood, over new house wrap with the flashing detailed properly at every opening.",
     detail:
       "Vinyl, fiber cement, and wood siding with professional installation. New house wrap, flashing, and trim details that keep Wisconsin weather where it belongs — outside.",
     points: ["Vinyl", "Fiber cement", "Wood"],
@@ -75,7 +75,7 @@ export const SERVICES = [
     title: "Windows",
     tag: "Energy efficient",
     blurb:
-      "Top-notch window replacement for better energy efficiency and curb appeal.",
+      "Full-frame or insert, shimmed square, insulated and sealed. A window is only as good as the opening it sits in.",
     detail:
       "We help you choose the right material and design, then handle a seamless installation — properly shimmed, insulated, and sealed for optimal performance season after season.",
     points: ["Full-frame & insert", "Double & triple pane", "Custom sizing"],
@@ -85,7 +85,7 @@ export const SERVICES = [
     title: "Kitchens",
     tag: "The heart of the home",
     blurb:
-      "Beautiful, functional kitchens that become the heart of your home.",
+      "Cabinetry, counters and appliances planned around how you actually cook, then built clean from demo to punch list.",
     detail:
       "Cabinetry, countertops, and appliances in modern or classic designs. We plan the layout around how you actually cook and live, then build it clean from demo to final punch list.",
     points: ["Cabinetry", "Countertops", "Appliance fit-out"],
@@ -94,7 +94,7 @@ export const SERVICES = [
     id: "bathrooms",
     title: "Bathrooms",
     tag: "Full reno or refresh",
-    blurb: "We turn your bathroom dreams into reality.",
+    blurb: "Waterproofing done right the first time, then tile, vanity and fixtures. Full renovation or a straightforward update.",
     detail:
       "Spaces that combine beauty and functionality inside your budget — complete renovations or simple updates, always with high-quality materials and waterproofing done properly the first time.",
     points: ["Tile & waterproofing", "Vanities", "Walk-in showers"],
@@ -103,7 +103,7 @@ export const SERVICES = [
     id: "decking",
     title: "Decking",
     tag: "Wood or composite",
-    blurb: "Expert decking that elevates your outdoor living space.",
+    blurb: "Composite or cedar on footings dug below frost line, framed and railed to carry a full house of people.",
     detail:
       "Classic wood or modern composite, customized to your style and budget. Proper footings, framing, and railings built to carry your family for decades.",
     points: ["Composite", "Cedar & treated", "Railings & stairs"],
@@ -113,7 +113,7 @@ export const SERVICES = [
     title: "Sunrooms & Liferooms",
     tag: "Year-round comfort",
     blurb:
-      "Stunning sunrooms and liferooms that bring the outdoors into your home.",
+      "Three-season or four, insulated and finished so it reads as part of the house rather than something bolted on.",
     detail:
       "Custom designs that maximize natural light and comfort for year-round enjoyment — insulated, finished, and built to feel like part of the house, not an add-on.",
     points: ["Three & four season", "Insulated glass", "Custom design"],
@@ -123,7 +123,7 @@ export const SERVICES = [
     title: "Door Replacement",
     tag: "Security & style",
     blurb:
-      "Professional door replacement that enhances security and aesthetic appeal.",
+      "Entry, patio and interior. Hung square, plumb and weather-tight, latching the way a new door should.",
     detail:
       "Entry doors, patio doors, and interior doors in a wide range of styles. Square, plumb, weather-tight, and locking the way a new door should.",
     points: ["Entry doors", "Patio doors", "Interior doors"],
@@ -133,7 +133,7 @@ export const SERVICES = [
     title: "Flooring",
     tag: "Hardwood to tile",
     blurb:
-      "A wide range of flooring to elevate the beauty and function of your home.",
+      "Hardwood, LVP, tile and carpet. The subfloor gets levelled first, because the finish only ever looks as good as what is under it.",
     detail:
       "Hardwood, laminate, tile, and carpet. Subfloor prepped and levelled first, because the finish is only as good as what is under it.",
     points: ["Hardwood", "Laminate & LVP", "Tile & carpet"],
@@ -142,7 +142,7 @@ export const SERVICES = [
     id: "additions",
     title: "Additions",
     tag: "More house, same address",
-    blurb: "Additions that give you the room you need without moving.",
+    blurb: "Bump-out to full second storey. Foundation, framing and roofline tied into the existing house so the seam does not show.",
     detail:
       "From a bump-out to a full second storey — foundation, framing, roofline, and finishes tied into the existing house so it reads like it was always there.",
     points: ["Bump-outs", "Second storey", "Garage & mudroom"],
@@ -190,38 +190,38 @@ export const WORK = [
 export const WHY_US = [
   {
     n: "01",
-    title: "25+ Years In",
+    title: "Twenty-five years in one town",
     body: "Over twenty-five years of remodeling homes around La Crosse. There is very little on a house we have not already seen, fixed, or rebuilt.",
   },
   {
     n: "02",
-    title: "Family Owned",
+    title: "You deal with the family",
     body: "Family owned and operated. You deal with the people whose name is on the truck, not a call center or a rotating cast of subs.",
   },
   {
     n: "03",
-    title: "Lifetime Warranty",
+    title: "The roof carries a lifetime warranty",
     body: "Our roofing comes with a lifetime warranty. We stand behind the work long after the dumpster leaves the driveway.",
   },
   {
     n: "04",
-    title: "Fits Your Budget",
-    body: "Quality craftsmanship and beautiful results that fit your vision and your budget. Clear scope, honest numbers, no surprise line items.",
+    title: "A straight answer on price",
+    body: "One itemised scope with the allowances written down. You should know what a project costs before the dumpster arrives, not after.",
   },
   {
     n: "05",
-    title: "Exterior To Interior",
+    title: "Roof to flooring, one contractor",
     body: "Roof, siding, and windows through to kitchens, baths, and flooring. One contractor for the whole house means no finger pointing.",
   },
 ];
 
 export const APPROACH = {
   eyebrow: "How we work",
-  headline: "We walk it first.",
-  script: "Then we build.",
+  headline: "We walk the job first.",
+  script: "Then we quote it.",
   body: [
     "Every project starts with a real conversation at your house — what you want, what it needs, and what the right call is for your budget. Sometimes that is a full kitchen. Sometimes it is a roof and a couple of windows.",
-    "We will tell you straight either way. Quality craftsmanship, dependable service, and beautiful results that fit your vision — that is the whole job description.",
+    "We will tell you straight either way, including when the answer is that you do not need us yet. Twenty-five years in one town means the work has to hold up in front of people we keep running into.",
   ],
   checks: [
     "Free in-home estimates",
@@ -240,9 +240,9 @@ export const APPROACH = {
  */
 export const FINANCING = {
   eyebrow: "Financing available",
-  headline: "Get it done now.",
-  script: "Pay over time.",
-  body: "A big project doesn't have to wait on a full checkbook. Ask about financing when you request your estimate — checking your rate won't affect your credit.",
+  headline: "The work does not have to",
+  script: "wait on the money.",
+  body: "If the roof needs doing now and the budget says next year, financing bridges it. Ask when you request the estimate — checking your rate is a soft pull and does not affect your credit.",
   stats: [
     { value: "0% APR", label: "Promotional financing offered" },
     { value: "$1k–$200k", label: "In funding available" },

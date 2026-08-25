@@ -38,9 +38,9 @@ function ReviewRails() {
     <section ref={root} className="relative overflow-hidden bg-cream-2 py-24 md:py-32">
       <div className="container-x">
         <SectionHeading
-          eyebrow="What homeowners say"
-          line1="Real reviews."
-          line2="Real neighbors."
+          eyebrow="Homeowners"
+          line1="What people say"
+          line2="after we have gone."
           align="center"
           className="mx-auto"
         />
@@ -119,7 +119,7 @@ function TrustPanel() {
     <section ref={root} className="relative bg-cream-2 py-24 md:py-32">
       <div className="container-x">
         <SectionHeading
-          eyebrow="Why homeowners trust us"
+          eyebrow="Track record"
           line1="Twenty-five years."
           line2="Same phone number."
           body="Reputation in a town this size is not built on advertising. It is built on roofs that do not leak and crews that show up."

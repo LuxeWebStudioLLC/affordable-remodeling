@@ -24,9 +24,9 @@ export default function Faq() {
       <div className="container-x grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
         <div className="lg:sticky lg:top-32 lg:self-start">
           <SectionHeading
-            eyebrow="Got questions?"
-            line1="Let's clear"
-            line2="it up."
+            eyebrow="Common questions"
+            line1="Answers before"
+            line2="you pick up the phone."
             body="Straight answers to what La Crosse homeowners ask us most."
           />
           <a href={BUSINESS.phoneHref} className="btn btn-ink mt-8">

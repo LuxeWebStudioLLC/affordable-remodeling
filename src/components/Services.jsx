@@ -30,8 +30,8 @@ export default function Services() {
         <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="What we do"
-            line1="Ten specialties."
-            line2="One crew."
+            line1="Ten trades,"
+            line2="one crew, one number."
             className="lg:max-w-2xl"
           />
           <p className="max-w-sm text-[0.95rem] leading-[1.75] text-ink/60 lg:pb-3">

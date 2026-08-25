@@ -272,12 +272,12 @@ export default function Work() {
             <div className="w-[76vw] shrink-0 lg:w-[26vw]">
               <p className="eyebrow text-blue-lt">Recent work</p>
               <h2 className="mt-5 text-[clamp(2.2rem,4.6vw,3.8rem)] text-cream">
-                A few jobs
+                Work we have
                 <br />
-                <span className="script text-blue-lt">around town.</span>
+                <span className="script text-blue-lt">put our name on.</span>
               </h2>
               <p className="mt-6 max-w-xs text-[0.9rem] leading-[1.8] text-cream/55">
-                Roofs, kitchens, baths and everything between — the street keeps going.
+                Six recent jobs around La Crosse, photographed as they were finished. No stock photography anywhere on this page.
               </p>
 
               {/* Swipe affordance for the reduced-motion fallback, where the
@@ -331,9 +331,9 @@ export default function Work() {
             {/* Closing panel */}
             <div className="w-[76vw] shrink-0 pr-[6vw] lg:w-[30vw]">
               <h3 className="text-[clamp(1.9rem,3.4vw,3rem)] text-cream">
-                Your street
+                Want yours
                 <br />
-                <span className="script text-blue-lt">could be next.</span>
+                <span className="script text-blue-lt">on this list?</span>
               </h3>
               <a
                 href="#contact"
@@ -343,7 +343,7 @@ export default function Work() {
                 }}
                 className="btn btn-cream mt-8"
               >
-                Start your project
+                Request an estimate
               </a>
             </div>
           </div>

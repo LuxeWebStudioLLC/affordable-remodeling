@@ -151,9 +151,9 @@ export default function Contact() {
         {/* ---- Left: pitch + direct contact ---- */}
         <div>
           <SectionHeading
-            eyebrow="Free estimate"
+            eyebrow="Request an estimate"
             line1="Tell us about"
-            line2="your project."
+            line2="the property."
             tone="light"
             body="Call, text, email, or send the form. We reply quickly, every estimate is free, and there is no high-pressure sales pitch waiting on the other end."
           />
