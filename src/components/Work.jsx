@@ -254,7 +254,13 @@ export default function Work() {
        panel. `clip` clips just as well without creating a scrollport. The rail
        does the real horizontal clipping anyway. */
     <section id="work" ref={root} className="work-strip relative grain overflow-x-clip bg-ink">
-      <div className="work-stage flex h-[100svh] flex-col justify-center">
+      {/* On touch the rail takes all remaining height (flex-1) instead of the
+          photos being sized in svh. The svh heights were tuned for the desktop
+          layout, where staggered offsets fill the space; on a phone they left
+          the strip occupying barely half the section, with black bands above
+          and below and the progress bar floating in dead air. Letting the rail
+          claim the leftover height fills any viewport exactly. */}
+      <div className="work-stage flex h-[100svh] flex-col justify-center gap-5 py-5 lg:gap-0 lg:py-0">
         {/* Rail — lerp-panned on touch, transform-driven from lg up, natively
             swipeable only under reduced motion. */}
         <div ref={rail} className="swipe-rail">
@@ -263,7 +269,7 @@ export default function Work() {
             className="work-track flex w-max items-center gap-[5vw] px-[6vw] lg:gap-[3.5vw] lg:transform-gpu lg:will-change-transform"
           >
             {/* Intro panel rides inside the strip */}
-            <div className="w-[70vw] shrink-0 lg:w-[26vw]">
+            <div className="w-[76vw] shrink-0 lg:w-[26vw]">
               <p className="eyebrow text-blue-lt">Recent work</p>
               <h2 className="mt-5 text-[clamp(2.2rem,4.6vw,3.8rem)] text-cream">
                 A few jobs
@@ -298,7 +304,7 @@ export default function Work() {
                   style={{ "--w": `${vw}vw` }}
                 >
                   <div
-                    className={`w-[64vw] overflow-hidden bg-ink-2 lg:w-[var(--w)] ${tall ? "h-[46svh] lg:h-[58vh]" : "h-[36svh] lg:h-[40vh]"}`}
+                    className={`h-[64svh] w-[82vw] overflow-hidden bg-ink-2 lg:w-[var(--w)] ${tall ? "lg:h-[58vh]" : "lg:h-[40vh]"}`}
                   >
                     <img
                       src={w.src}
@@ -309,7 +315,7 @@ export default function Work() {
                       className="h-full w-full object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                     />
                   </div>
-                  <figcaption className="mt-4 flex items-baseline gap-4">
+                  <figcaption className="mt-3 flex shrink-0 items-baseline gap-4 lg:mt-4">
                     <span className="font-display text-[0.7rem] tracking-[0.14em] text-copper">
                       {String(i + 1).padStart(2, "0")}
                     </span>
@@ -323,7 +329,7 @@ export default function Work() {
             })}
 
             {/* Closing panel */}
-            <div className="w-[70vw] shrink-0 pr-[6vw] lg:w-[30vw]">
+            <div className="w-[76vw] shrink-0 pr-[6vw] lg:w-[30vw]">
               <h3 className="text-[clamp(1.9rem,3.4vw,3rem)] text-cream">
                 Your street
                 <br />
@@ -345,7 +351,7 @@ export default function Work() {
 
         {/* Progress instrument — fed by the lerp on touch, by the pin on
             desktop, by rail scroll under reduced motion. */}
-        <div className="container-x mt-10 flex items-center gap-5 lg:mt-12 lg:gap-6">
+        <div className="container-x flex shrink-0 items-center gap-5 lg:mt-12 lg:gap-6">
           <span ref={counter} className="font-display text-[0.8rem] text-cream/70 tabular-nums">
             01
           </span>
