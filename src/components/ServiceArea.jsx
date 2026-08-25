@@ -5,12 +5,21 @@ import { BUSINESS, SERVICE_AREA } from "../data/site";
 import SectionHeading from "./SectionHeading";
 
 /**
- * Hand-drawn service-area instrument. No map tiles, no Google — concentric
- * distance rings centred on La Crosse with real towns plotted by bearing and
- * distance, drawn like a plate from an old county atlas: the Mississippi
- * running through it, cardinal points on the bezel, ring distances in serif
- * italic, and a figure caption underneath. Everything animates once on entry
- * (no scrub, transforms/attributes only) so it stays smooth.
+ * Hand-drawn service-area map. No map tiles, no Google — concentric distance
+ * rings centred on La Crosse with real towns plotted by bearing and distance,
+ * drawn like a plate from a county atlas: the Mississippi running through it,
+ * cardinal points, ring distances in serif italic, a figure caption.
+ *
+ * Deliberately NOT an instrument. An earlier version had a rotating radar
+ * sweep, pulsing pings, a crosshair and a 72-tick bezel, which read as
+ * surveillance equipment rather than cartography. Those are gone; what is
+ * left is a drawing.
+ *
+ * Every town is labelled, at every screen size. Labels are laid out with a
+ * vertical de-collision pass and leader lines, because a name you cannot read
+ * is the same as a town that is not on the map.
+ *
+ * Everything animates once on entry (no scrub) so it stays smooth.
  */
 
 const SIZE = 600;                    // viewBox
@@ -22,20 +31,6 @@ const rad = (deg) => ((deg - 90) * Math.PI) / 180;
 const plot = (bearing, miles) => ({
   x: C + Math.cos(rad(bearing)) * miles * PX_PER_MILE,
   y: C + Math.sin(rad(bearing)) * miles * PX_PER_MILE,
-});
-
-/** 72 short ticks around the outer ring, like a bezel. */
-const TICKS = Array.from({ length: 72 }, (_, i) => {
-  const a = rad(i * 5);
-  const r1 = MAX_R + 6;
-  const r2 = i % 18 === 0 ? MAX_R + 18 : MAX_R + 11;
-  return {
-    x1: C + Math.cos(a) * r1,
-    y1: C + Math.sin(a) * r1,
-    x2: C + Math.cos(a) * r2,
-    y2: C + Math.sin(a) * r2,
-    major: i % 18 === 0,
-  };
 });
 
 /** Cardinal letters sit just past the major ticks. */
@@ -59,6 +54,46 @@ const RIVER_D = `M 183 60
   S 284 350, 296 415
   S 300 505, 312 552`;
 
+/**
+ * Plot every town, then push labels apart vertically so all 17 names are
+ * readable. Each side of the map is de-collided independently; a label that
+ * had to move gets a leader line back to its dot.
+ */
+const LABELS = (() => {
+  const MIN_GAP = 17;
+  /* Keep every label clear of the "La Crosse" text sitting under the centre. */
+  const CLEAR_R = 66;
+  const sides = { east: [], west: [] };
+
+  SERVICE_AREA.towns.forEach((t) => {
+    const p = plot(t.bearing, t.miles);
+    const east = p.x >= C;
+    const fromCentre = Math.hypot(p.x - C, p.y - C);
+    sides[east ? "east" : "west"].push({
+      ...t,
+      x: p.x,
+      y: p.y,
+      /* Close-in towns get their label pushed outward; a leader line keeps it
+         attached to the dot. */
+      lx: fromCentre < CLEAR_R ? C + (east ? CLEAR_R : -CLEAR_R) : p.x,
+      ly: p.y,
+    });
+  });
+
+  Object.values(sides).forEach((side) => {
+    side.sort((a, b) => a.ly - b.ly);
+    for (let i = 1; i < side.length; i += 1) {
+      const gap = side[i].ly - side[i - 1].ly;
+      if (gap < MIN_GAP) side[i].ly = side[i - 1].ly + MIN_GAP;
+    }
+    /* If the stack ran off the bottom, lift the whole column back inside. */
+    const overflow = side[side.length - 1].ly - (SIZE - 10);
+    if (overflow > 0) side.forEach((t) => (t.ly -= overflow));
+  });
+
+  return [...sides.east, ...sides.west];
+})();
+
 export default function ServiceArea() {
   const root = useRef(null);
   const svg = useRef(null);
@@ -77,8 +112,8 @@ export default function ServiceArea() {
       if (prefersReducedMotion()) return; // static map is complete on its own
 
       const rings = el.querySelectorAll("[data-ring]");
-      const ticks = el.querySelectorAll("[data-tick]");
       const dots = el.querySelectorAll("[data-dot]");
+      const leaders = el.querySelectorAll("[data-leader]");
       const labels = el.querySelectorAll("[data-town-label], [data-ring-label], [data-cardinal]");
       const river = el.querySelector("[data-river]");
 
@@ -93,8 +128,7 @@ export default function ServiceArea() {
         svgOrigin: `${C} ${C}`,
         duration: 1.5,
         stagger: 0.14,
-      })
-        .from(ticks, { opacity: 0, duration: 0.5, stagger: 0.008 }, 0.3);
+      });
 
       /* The river draws itself in, source to mouth. */
       if (river) {
@@ -107,37 +141,11 @@ export default function ServiceArea() {
         );
       }
 
-      tl.from(
-        dots,
-        { attr: { r: 0 }, opacity: 0, duration: 0.7, stagger: 0.045 },
-        0.9,
-      ).from(labels, { opacity: 0, duration: 0.8, stagger: 0.03 }, 1.2);
+      tl.from(dots, { attr: { r: 0 }, opacity: 0, duration: 0.7, stagger: 0.03 }, 0.9)
+        .from(leaders, { opacity: 0, duration: 0.6, stagger: 0.02 }, 1.1)
+        .from(labels, { opacity: 0, duration: 0.8, stagger: 0.025 }, 1.15);
 
-      /* Radar ping on HQ — slow, quiet, forever. */
-      el.querySelectorAll("[data-ping]").forEach((ping, i) => {
-        gsap.fromTo(
-          ping,
-          { attr: { r: 8 }, opacity: 0.45 },
-          {
-            attr: { r: 52 },
-            opacity: 0,
-            duration: 3.2,
-            delay: 1.4 + i * 1.6,
-            repeat: -1,
-            repeatDelay: (2 - 1) * 1.6,
-            ease: "power1.out",
-          },
-        );
-      });
 
-      /* A very slow sweep hand, barely-there. */
-      gsap.to(el.querySelector("[data-sweep]"), {
-        rotation: 360,
-        svgOrigin: `${C} ${C}`,
-        duration: 48,
-        repeat: -1,
-        ease: "none",
-      });
     }, root);
 
     return () => ctx.revert();
@@ -192,7 +200,7 @@ export default function ServiceArea() {
           </p>
         </div>
 
-        {/* ---- Instrument ---- */}
+        {/* ---- The map ---- */}
         <div data-map className="relative mx-auto w-full max-w-[560px]">
           <svg
             ref={svg}
@@ -209,22 +217,9 @@ export default function ServiceArea() {
                 <stop offset="55%" stopColor="rgba(10,106,166,0.05)" />
                 <stop offset="100%" stopColor="rgba(10,106,166,0)" />
               </radialGradient>
-              {/* Invisible path the river's label rides along. */}
-              <path id="sa-river-label" d="M 236 250 C 258 300, 262 340, 280 405" fill="none" />
             </defs>
 
             <circle data-ring cx={C} cy={C} r={MAX_R} fill="url(#sa-glow)" stroke="none" />
-
-            {/* bezel ticks */}
-            {TICKS.map((t, i) => (
-              <line
-                key={i}
-                data-tick
-                x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-                stroke={t.major ? "rgba(247,244,238,0.35)" : "rgba(247,244,238,0.14)"}
-                strokeWidth={t.major ? 1.5 : 1}
-              />
-            ))}
 
             {/* cardinal points, set in the serif like a compass card */}
             {CARDINALS.map((c) => (
@@ -233,7 +228,7 @@ export default function ServiceArea() {
                 data-cardinal
                 x={c.x} y={c.y}
                 textAnchor="middle"
-                className="fill-cream/45"
+                className="fill-cream/40"
                 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 15, fontStyle: "italic", fontWeight: 500 }}
               >
                 {c.label}
@@ -272,73 +267,62 @@ export default function ServiceArea() {
               strokeWidth="2.5"
               strokeLinecap="round"
             />
-            <text
-              data-ring-label
-              className="fill-cream/30"
-              style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 11.5, fontStyle: "italic", letterSpacing: "0.14em" }}
-            >
-              <textPath href="#sa-river-label" startOffset="8%">
-                Mississippi River
-              </textPath>
-            </text>
 
-            {/* crosshair */}
-            <line data-tick x1={C - 14} y1={C} x2={C + 14} y2={C} stroke="rgba(247,244,238,0.25)" strokeWidth="1" />
-            <line data-tick x1={C} y1={C - 14} x2={C} y2={C + 14} stroke="rgba(247,244,238,0.25)" strokeWidth="1" />
-
-            {/* sweep hand */}
-            <line
-              data-sweep
-              x1={C} y1={C} x2={C} y2={C - MAX_R}
-              stroke="rgba(85,163,214,0.10)"
-              strokeWidth="2"
-            />
-
-            {/* towns */}
-            {SERVICE_AREA.towns.map((t) => {
-              const p = plot(t.bearing, t.miles);
-              const east = p.x >= C;
-              const labelled = t.miles >= 14;
+            {/* towns — every one named, labels de-collided, leader lines where
+                a label had to move off its dot */}
+            {LABELS.map((t) => {
+              const east = t.x >= C;
+              const lx = t.lx + (east ? 11 : -11);
+              const moved = Math.abs(t.ly - t.y) > 2.5 || Math.abs(t.lx - t.x) > 2.5;
               return (
                 <g key={t.name}>
-                  {t.major && (
-                    <circle
-                      data-dot
-                      cx={p.x} cy={p.y} r="7.5"
-                      fill="none"
-                      stroke="rgba(85,163,214,0.35)"
-                      strokeWidth="1"
+                  {moved && (
+                    <line
+                      data-leader
+                      x1={t.x + (east ? 4.5 : -4.5)}
+                      y1={t.y}
+                      x2={lx - (east ? 2 : -2)}
+                      y2={t.ly - 3}
+                      stroke="rgba(247,244,238,0.2)"
+                      strokeWidth="0.75"
                     />
                   )}
-                  <circle data-dot cx={p.x} cy={p.y} r="3.4" className="fill-blue-lt" opacity="0.9" />
-                  {labelled && (
-                    <text
-                      data-town-label
-                      x={p.x + (east ? 12 : -12)}
-                      y={p.y + 4}
-                      textAnchor={east ? "start" : "end"}
-                      className={t.major ? "fill-cream/75" : "hidden fill-cream/45 md:inline"}
-                      style={{ fontSize: 12.5, letterSpacing: "0.02em" }}
-                    >
-                      {t.name}
-                    </text>
-                  )}
+                  <circle
+                    data-dot
+                    cx={t.x} cy={t.y}
+                    r={t.major ? 3.6 : 2.6}
+                    className={t.major ? "fill-blue-lt" : "fill-blue-lt/70"}
+                  />
+                  <text
+                    data-town-label
+                    x={lx}
+                    y={t.ly}
+                    textAnchor={east ? "start" : "end"}
+                    className={t.major ? "fill-cream/80" : "fill-cream/55"}
+                    style={{
+                      fontSize: t.major ? 12.5 : 11.5,
+                      fontWeight: t.major ? 500 : 400,
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {t.name}
+                  </text>
                 </g>
               );
             })}
 
-            {/* HQ */}
-            <circle data-ping cx={C} cy={C} r="8" fill="none" stroke="rgba(208,138,70,0.8)" strokeWidth="1.5" />
-            <circle data-ping cx={C} cy={C} r="8" fill="none" stroke="rgba(208,138,70,0.8)" strokeWidth="1.5" />
-            <circle data-dot cx={C} cy={C} r="6" className="fill-copper" />
+            {/* La Crosse — the centre. Copper, and the only name set in the
+                serif, so it reads as the origin without needing a label like
+                "HQ" bolted on. */}
+            <circle data-dot cx={C} cy={C} r="5.5" className="fill-copper" />
             <text
               data-town-label
-              x={C} y={C + 27}
+              x={C} y={C + 26}
               textAnchor="middle"
               className="fill-cream"
-              style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.16em" }}
+              style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: 17, fontWeight: 600, fontStyle: "italic" }}
             >
-              LA CROSSE — HQ
+              La Crosse
             </text>
           </svg>
 

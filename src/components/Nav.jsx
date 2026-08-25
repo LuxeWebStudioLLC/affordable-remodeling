@@ -106,7 +106,10 @@ export default function Nav({ ready }) {
 
   // While the menu is open the bar sits on the dark panel, so it needs the
   // light treatment regardless of scroll position.
-  const onDark = open || !solid;
+  /* The header is dark in every state now — transparent over the hero, ink
+     once you scroll past it. The logo is built for a black ground (its glow
+     only exists against one), so it must never sit on the cream navbar. */
+  const onDark = true;
 
   const linkClass = `eyebrow link-line transition-colors duration-500 ${
     onDark ? "text-white/80 hover:text-white" : "text-ink/70 hover:text-ink"
@@ -122,7 +125,7 @@ export default function Nav({ ready }) {
           open ? "z-[70] bg-transparent" : "z-50"
         } ${
           !open && solid
-            ? "bg-cream/92 shadow-[0_1px_0_rgba(11,16,20,0.08)] backdrop-blur-xl"
+            ? "bg-ink/88 shadow-[0_1px_0_rgba(255,255,255,0.07)] backdrop-blur-xl"
             : !open
               ? "bg-gradient-to-b from-ink/55 to-transparent"
               : ""
