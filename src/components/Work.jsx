@@ -260,7 +260,7 @@ export default function Work() {
           the strip occupying barely half the section, with black bands above
           and below and the progress bar floating in dead air. Letting the rail
           claim the leftover height fills any viewport exactly. */}
-      <div className="work-stage flex h-[100svh] flex-col justify-center gap-5 py-5 lg:gap-0 lg:py-0">
+      <div className="work-stage flex h-[100dvh] flex-col justify-center gap-5 py-5 lg:gap-0 lg:py-0">
         {/* Rail — lerp-panned on touch, transform-driven from lg up, natively
             swipeable only under reduced motion. */}
         <div ref={rail} className="swipe-rail">

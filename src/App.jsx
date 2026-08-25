@@ -20,6 +20,7 @@ import Financing from "./components/Financing";
 import Contact from "./components/Contact";
 import Faq from "./components/Faq";
 import Footer from "./components/Footer";
+import Debug from "./components/Debug";
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -85,6 +86,7 @@ export default function App() {
         Skip to content
       </a>
 
+      {new URLSearchParams(window.location.search).has("debug") && <Debug />}
       <Preloader onDone={onLoaded} />
       <ScrollProgress />
       <CallHandler />
