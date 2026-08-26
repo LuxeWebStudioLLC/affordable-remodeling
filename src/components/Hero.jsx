@@ -260,9 +260,9 @@ export default function Hero({ ready }) {
         <img
           data-hero
           data-hero-mark
-          src="/logo-icon.png"
+          src="/logo-mark.webp"
           alt=""
-          className="h-14 w-auto drop-shadow-[0_10px_40px_rgba(0,0,0,0.45)] sm:h-20 md:h-28"
+          className="h-16 w-auto sm:h-24 md:h-32"
         />
 
         <p

@@ -37,7 +37,7 @@ export default function About() {
                 section. The stacked wordmark is dark blue and would vanish
                 here — and the heading above already says the company name. */}
             <img
-              src="/logo-icon.png"
+              src="/logo-mark.webp"
               alt={`${BUSINESS.legalName} logo`}
               className="mt-12 h-32 w-auto md:h-40"
             />

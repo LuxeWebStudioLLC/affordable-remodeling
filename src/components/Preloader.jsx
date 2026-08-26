@@ -93,9 +93,9 @@ export default function Preloader({ onDone }) {
     >
       <div ref={wordmark} className="translate-y-6 opacity-0 text-center">
         <img
-          src="/logo-icon.png"
+          src="/logo-mark.webp"
           alt=""
-          className="mx-auto h-16 w-auto md:h-20"
+          className="mx-auto h-20 w-auto md:h-24"
         />
         <p className="eyebrow mt-6 text-cream/45">Affordable Home Remodeling</p>
       </div>

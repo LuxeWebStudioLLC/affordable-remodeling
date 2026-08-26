@@ -76,7 +76,7 @@ export default function Footer() {
           {/* Mark in full colour; the name is set in type beside it because
               their dark-blue wordmark is unreadable on this background. */}
           <div className="flex items-center gap-3.5">
-            <img src="/logo-icon.png" alt="" className="h-12 w-auto md:h-14" />
+            <img src="/logo-mark.webp" alt="" className="h-14 w-auto md:h-16" />
             <p className="font-display text-[0.82rem] leading-[1.25] tracking-[0.06em] text-cream md:text-[0.9rem]">
               Affordable
               <br />

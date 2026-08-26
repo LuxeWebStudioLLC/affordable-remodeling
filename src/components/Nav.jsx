@@ -108,11 +108,11 @@ export default function Nav({ ready }) {
   // light treatment regardless of scroll position.
   /* The header is dark in every state now — transparent over the hero, ink
      once you scroll past it. The logo is built for a black ground (its glow
-     only exists against one), so it must never sit on the cream navbar. */
-  const onDark = true;
+     only exists against one), so it must never sit on a cream navbar. Every
+     control below is therefore unconditionally light-on-dark. */
 
   const linkClass = `eyebrow link-line transition-colors duration-500 ${
-    onDark ? "text-white/80 hover:text-white" : "text-ink/70 hover:text-ink"
+    "text-white/80 hover:text-white"
   }`;
 
   return (
@@ -148,21 +148,25 @@ export default function Nav({ ready }) {
             className="group flex shrink-0 items-center gap-2.5 lg:absolute lg:left-1/2 lg:-translate-x-1/2"
             aria-label={`${BUSINESS.legalName} — home`}
           >
-            {/* Horizontal lockup in full brand colour. Their wordmark is dark
-                blue, so it only rides along on the light navbar — over the
-                hero it would disappear into the photo. The mark carries it. */}
+            {/* The mark carries real alpha, extracted from the artwork's own
+                luminance and un-premultiplied, so the neon composites cleanly
+                on any ground. mix-blend-mode was tried first and failed:
+                ancestors with clip-path and z-index isolate the blend group,
+                so the black field never blended away and showed as a box.
+
+                The company name is set in type beside it — the supplied
+                artwork's wordmark is cropped off at the bottom, and would be
+                illegible at this height regardless. */}
             <img
-              src="/logo-icon.png"
-              alt={onDark ? BUSINESS.legalName : ""}
-              className="h-8 w-auto transition-transform duration-700 group-hover:scale-[1.06] md:h-9"
+              src="/logo-mark.webp"
+              alt=""
+              className="h-10 w-auto transition-transform duration-700 group-hover:scale-[1.06] md:h-12"
             />
-            {!onDark && (
-              <img
-                src="/logo-word.png"
-                alt={BUSINESS.legalName}
-                className="h-[1.05rem] w-auto md:h-[1.15rem]"
-              />
-            )}
+            <span className="font-display text-[0.7rem] leading-[1.2] tracking-[0.1em] text-cream md:text-[0.78rem]">
+              AFFORDABLE
+              <br />
+              <span className="text-blue-lt">REMODELING</span>
+            </span>
           </a>
 
           {/* Right links + phone (desktop) */}
@@ -183,7 +187,7 @@ export default function Nav({ ready }) {
               href={BUSINESS.phoneHref}
               aria-label={`Call ${BUSINESS.phone}`}
               className={`grid h-10 w-10 place-items-center rounded-full border transition-colors duration-500 ${
-                onDark ? "border-white/30 text-white" : "border-ink/15 text-ink"
+                "border-white/30 text-white"
               }`}
             >
               <PhoneIcon />
@@ -194,7 +198,7 @@ export default function Nav({ ready }) {
               aria-expanded={open}
               aria-label={open ? "Close menu" : "Open menu"}
               className={`relative z-[70] grid h-10 w-10 place-items-center transition-colors duration-500 ${
-                onDark ? "text-white" : "text-ink"
+                "text-white"
               }`}
             >
               <span className="relative block h-3 w-6">
