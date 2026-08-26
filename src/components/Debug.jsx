@@ -63,11 +63,28 @@ export default function Debug() {
       ]);
     };
 
+    /* ?debug=1&scrollto=0.5 parks the page at that fraction of the Work
+       strip's pan range. The only way to inspect mid-pan state on a real
+       device that cannot be driven by touch from here. */
+    const to = parseFloat(new URLSearchParams(window.location.search).get("scrollto"));
+    let jump = 0;
+    if (!Number.isNaN(to)) {
+      jump = setTimeout(() => {
+        const sec = document.querySelector("#work");
+        const stage = sec?.querySelector(".work-stage");
+        if (!sec || !stage) return;
+        const top = sec.getBoundingClientRect().top + window.scrollY;
+        const span = sec.offsetHeight - stage.offsetHeight;
+        window.scrollTo(0, Math.round(top + span * Math.min(1, Math.max(0, to))));
+      }, 3000);
+    }
+
     read();
     const id = setInterval(read, 400);
     window.addEventListener("scroll", read, { passive: true });
     window.addEventListener("resize", read);
     return () => {
+      if (jump) clearTimeout(jump);
       clearInterval(id);
       window.removeEventListener("scroll", read);
       window.removeEventListener("resize", read);
