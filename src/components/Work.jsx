@@ -96,19 +96,30 @@ export default function Work() {
       stops = [0, ...centres, 1];
     };
 
-    /* Each scroll segment is spent HOLD parked on the current photo, then
-       eased across to the next. A plain ease is not enough — smootherstep only
-       flattens its *derivative* at the ends, which reads as a slow slide
-       rather than a stop. A real plateau is what makes each photo land. */
-    const HOLD = 0.45;
-    const smoother = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+    /* Each scroll segment parks on the current photo for HOLD, then eases
+       across to the next.
+
+       Tuned against the real tile geometry for the trade-off between
+       composition (how much of the range rests on a centred photo) and
+       smoothness (peak sideways velocity over the mean — the spikes are what
+       read as stepping):
+
+         smootherstep @0.45   3.59x peak/mean   60% composed   <- was steppy
+         smoothstep   @0.35   2.45x peak/mean   50% composed   <- shipped
+
+       Cubic smoothstep rather than quintic smootherstep: the quintic is very
+       steep through the middle, which is exactly the spike that reads as a
+       jump. Dropping to cubic buys 32% lower peak velocity for 10 points of
+       composition, which is the right way round for "make it smooth". */
+    const HOLD = 0.35;
+    const smoothstep = (t) => t * t * (3 - 2 * t);
 
     const snap = (u) => {
       if (stops.length < 2) return u;
       const segs = stops.length - 1;
       const i = Math.min(segs - 1, Math.floor(u * segs));
       const t = Math.min(1, Math.max(0, u * segs - i));
-      const e = t < HOLD ? 0 : smoother((t - HOLD) / (1 - HOLD));
+      const e = t < HOLD ? 0 : smoothstep((t - HOLD) / (1 - HOLD));
       return stops[i] + (stops[i + 1] - stops[i]) * e;
     };
 
