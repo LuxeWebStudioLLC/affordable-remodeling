@@ -73,10 +73,52 @@ export default function Work() {
       return true;
     };
 
+    /* Progress values at which the strip rests with a photo centred.
+       ------------------------------------------------------------------
+       On a phone a tile is 82vw, so only one fits on screen: any position
+       that is not a tile centre shows the edge of one photo, a black gutter,
+       and the edge of the next. Verified on a real iPhone — the pan maths was
+       exact the whole time, but half the scroll range looked broken because
+       nothing was ever composed. Snapping the DWELL points (not the motion)
+       fixes that: the strip holds each photo, then moves briskly to the next. */
+    let stops = [];
+    const computeStops = () => {
+      if (pan <= 0) {
+        stops = [];
+        return;
+      }
+      const half = railEl.clientWidth / 2;
+      const centres = Array.from(trackEl.querySelectorAll("figure")).map((fig) => {
+        const centre = fig.offsetLeft + fig.offsetWidth / 2;
+        return Math.min(1, Math.max(0, (centre - half) / pan));
+      });
+      /* 0 and 1 keep the intro and outro panels as rest points of their own. */
+      stops = [0, ...centres, 1];
+    };
+
+    /* Each scroll segment is spent HOLD parked on the current photo, then
+       eased across to the next. A plain ease is not enough — smootherstep only
+       flattens its *derivative* at the ends, which reads as a slow slide
+       rather than a stop. A real plateau is what makes each photo land. */
+    const HOLD = 0.45;
+    const smoother = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+
+    const snap = (u) => {
+      if (stops.length < 2) return u;
+      const segs = stops.length - 1;
+      const i = Math.min(segs - 1, Math.floor(u * segs));
+      const t = Math.min(1, Math.max(0, u * segs - i));
+      const e = t < HOLD ? 0 : smoother((t - HOLD) / (1 - HOLD));
+      return stops[i] + (stops[i + 1] - stops[i]) * e;
+    };
+
     /* What observers call: the section's height depends on --pan, so when it
        moves the pinned geometry has to be re-read — but only then. */
     const remeasure = () => {
-      if (measure()) ScrollTrigger.refresh();
+      if (measure()) {
+        computeStops();
+        ScrollTrigger.refresh();
+      }
     };
 
     const setX = gsap.quickSetter(trackEl, "x", "px");
@@ -100,7 +142,10 @@ export default function Work() {
          offsetHeight-based so the collapsing iOS URL bar can't shift it. */
       const span = rootEl.offsetHeight - (rootEl.firstElementChild?.offsetHeight || 0);
       const top = rootEl.getBoundingClientRect().top;
-      const target = span > 0 ? Math.min(1, Math.max(0, -top / span)) : 0;
+      const raw = span > 0 ? Math.min(1, Math.max(0, -top / span)) : 0;
+      /* Still a pure function of scroll position — no lag, no drift — just
+         mapped so the rest points land on composed frames. */
+      const target = snap(raw);
 
       /* NO smoothing. This was lerped at 0.16/frame to paper over iOS's
          bursty scroll events, and that was the bug users actually felt:
@@ -180,7 +225,11 @@ export default function Work() {
     /* Belt and braces for the very first frames, where WebKit can report a
        zero-width track before it has laid anything out. */
     remeasure();
-    requestAnimationFrame(remeasure);
+    computeStops();
+    requestAnimationFrame(() => {
+      remeasure();
+      computeStops();
+    });
 
     /* ---- Desktop: pinned transform scrub ---- */
     const ctx = gsap.context(() => {
