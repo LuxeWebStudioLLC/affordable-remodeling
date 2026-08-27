@@ -119,11 +119,6 @@ export default function Hero({ ready }) {
             0.5,
           )
           .from(
-            q("[data-hero-name]"),
-            { autoAlpha: 0, y: 16, duration: 1, ease: EASE },
-            0.7,
-          )
-          .from(
             split.lines,
             { yPercent: 115, duration: 1.25, ease: EASE, stagger: 0.1 },
             0.8,
@@ -257,30 +252,27 @@ export default function Hero({ ready }) {
 
       {/* ---- Copy ---- */}
       <div data-hero-copy className="container-x relative z-10 flex flex-col items-center text-center">
-        <img
-          data-hero
-          data-hero-mark
-          src="/logo-mark.webp"
-          alt=""
-          className="h-16 w-auto sm:h-24 md:h-32"
-        />
-
-        {/* The real wordmark, cut from the client's artwork, replacing the
-            letterspaced type line that was standing in for it. Cropped to the
-            banner + AFFORDABLE + REMODELING block only — the services list,
-            "Free Estimates" and phone number are deliberately left out.
+        {/* Badge and wordmark as ONE asset, cut from the client's artwork.
+            They were two separate images nesting by CSS margin, which left
+            them reading as pieces floating apart rather than the single
+            lockup the artwork is. Shipping the whole thing as one crop means
+            the overlap and proportions are the artwork's own and cannot drift
+            at any viewport.
 
             Background removed by flood-filling the page-white inward from the
             edges: connectivity is what tells page-white from the chrome-white
             INSIDE the letterforms, which a brightness threshold would erase.
             The outer glow is then un-matted from white, so it composites over
-            the video as light rather than as a pale haze. */}
+            the video as light rather than as a pale haze.
+
+            Crop excludes the services list, "Free Estimates" and the phone
+            number, as asked. */}
         <img
           data-hero
-          data-hero-name
-          src="/logo-wordmark.webp"
+          data-hero-mark
+          src="/logo-lockup.webp"
           alt={BUSINESS.legalName}
-          className="mt-6 h-auto w-[min(86vw,30rem)] sm:mt-7 sm:w-[min(72vw,34rem)] lg:w-[38rem]"
+          className="h-auto w-[min(84vw,26rem)] sm:w-[min(70vw,30rem)] lg:w-[34rem]"
         />
 
         <h1
