@@ -240,11 +240,15 @@ export default function Hero({ ready }) {
       </div>
       </div>
 
-      {/* ---- SEO / positioning strip ---- */}
+      {/* ---- SEO / positioning strip ----
+           inset-x-0, not left-0: `margin-inline: auto` (from container-x) has
+           nothing to distribute unless BOTH edges are pinned, so the box sat
+           hard against the left edge and text-center merely centred the text
+           inside that off-centre box. */}
       <p
         data-hero
         data-hero-strip
-        className="container-x absolute top-[86px] left-0 z-10 hidden text-center text-[0.6rem] leading-relaxed tracking-[0.2em] text-white/35 uppercase md:block"
+        className="container-x absolute inset-x-0 top-[86px] z-10 hidden text-center text-[0.6rem] leading-relaxed tracking-[0.2em] text-white/35 uppercase md:block"
       >
         {BUSINESS.legalName} — La Crosse, Wisconsin remodeling contractor specializing in roofing,
         siding, windows, kitchens, bathrooms, decks and additions for {BUSINESS.yearsInBusiness} years.
@@ -272,7 +276,7 @@ export default function Hero({ ready }) {
           data-hero-mark
           src="/logo-lockup.webp"
           alt={BUSINESS.legalName}
-          className="h-auto w-[min(84vw,26rem)] sm:w-[min(70vw,30rem)] lg:w-[34rem]"
+          className="h-auto w-[min(76vw,23rem)] sm:w-[min(63vw,26.5rem)] lg:w-[30rem]"
         />
 
         <h1
