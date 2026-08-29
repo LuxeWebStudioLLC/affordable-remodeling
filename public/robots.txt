@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://affordable-remodeling.com/sitemap.xml
+Sitemap: https://www.affordable-remodeling.com/sitemap.xml
