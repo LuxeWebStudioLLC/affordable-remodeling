@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { gsap, prefersReducedMotion, scrollToSection } from "../lib/gsap";
-import { revealImage, revealUp } from "../lib/animations";
+import { revealImage, revealUp, scrubWords } from "../lib/animations";
 import { APPROACH, BUSINESS } from "../data/site";
 import SectionHeading from "./SectionHeading";
 
@@ -31,7 +31,12 @@ export default function Approach() {
       }
     }, root);
 
-    return () => ctx.revert();
+    const cleans = [...root.current.querySelectorAll("[data-prose]")].map((el) => scrubWords(el));
+
+    return () => {
+      ctx.revert();
+      cleans.forEach((c) => c());
+    };
   }, []);
 
   return (
@@ -71,7 +76,7 @@ export default function Approach() {
 
           <div className="mt-7 space-y-5">
             {APPROACH.body.map((p) => (
-              <p key={p.slice(0, 24)} className="max-w-xl text-[0.95rem] leading-[1.85] text-ink/68">
+              <p key={p.slice(0, 24)} data-prose className="max-w-xl text-[0.95rem] leading-[1.85] text-ink/68">
                 {p}
               </p>
             ))}

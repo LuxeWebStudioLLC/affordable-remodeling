@@ -280,3 +280,53 @@ export function initMagnetic(selector = ".btn", strength = 0.22) {
 
   return () => cleanups.forEach((c) => c());
 }
+
+/**
+ * Word-by-word reveal driven by scroll position — the effect that was used
+ * once on the Statement line and is now the house treatment for body copy.
+ *
+ * Each word starts dim and resolves as the paragraph crosses the viewport.
+ * Deliberately opacity rather than a real blur filter: blurring dozens of
+ * split spans forces a filter pass per frame on the main thread and stutters
+ * on phones, whereas opacity stays on the compositor. It reads the same.
+ *
+ * Splits only after fonts settle, so words are measured against the real
+ * metrics rather than the fallback face — otherwise the split re-wraps and
+ * the reveal lands on the wrong words.
+ *
+ * Returns a cleanup that reverts both the tween and the split, so React
+ * remounts never leave the DOM full of orphaned span soup.
+ */
+export function scrubWords(el, { start = "top 88%", end = "bottom 62%", from = 0.16 } = {}) {
+  if (!el || prefersReducedMotion()) return () => {};
+
+  let split;
+  let ctx;
+  let cancelled = false;
+
+  const run = () => {
+    if (cancelled || !el.isConnected) return;
+    ctx = gsap.context(() => {
+      split = SplitText.create(el, { type: "words" });
+      gsap.fromTo(
+        split.words,
+        { opacity: from },
+        {
+          opacity: 1,
+          ease: "none",
+          stagger: 0.5,
+          scrollTrigger: { trigger: el, start, end, scrub: 0.6 },
+        },
+      );
+    });
+  };
+
+  if (document.fonts?.ready) document.fonts.ready.then(run).catch(run);
+  else run();
+
+  return () => {
+    cancelled = true;
+    ctx?.revert();
+    split?.revert();
+  };
+}

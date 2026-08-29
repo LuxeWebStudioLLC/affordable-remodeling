@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { gsap, EASE, prefersReducedMotion, scrollToSection } from "../lib/gsap";
 import { responsive } from "../lib/img";
-import { revealUp } from "../lib/animations";
+import { revealUp, scrubWords } from "../lib/animations";
 
 /**
  * Featured project as a labelled before/after pair.
@@ -55,7 +55,12 @@ export default function Transformation() {
       });
     }, root);
 
-    return () => ctx.revert();
+    const cleanScrub = scrubWords(root.current.querySelector("[data-prose]"));
+
+    return () => {
+      ctx.revert();
+      cleanScrub();
+    };
   }, []);
 
   return (
@@ -71,7 +76,7 @@ export default function Transformation() {
               <span className="script block text-blue-lt">Whole new face.</span>
             </h2>
           </div>
-          <p data-t className="max-w-xs text-[0.85rem] leading-relaxed text-cream/55">
+          <p data-t data-prose className="max-w-xs text-[0.85rem] leading-relaxed text-cream/55">
             New siding, trim and deck on a farmhouse outside La Crosse. Same pines, same roofline.
             Everything else we replaced.
           </p>

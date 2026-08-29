@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "../lib/gsap";
-import { revealUp, revealRule, countUp } from "../lib/animations";
+import { revealUp, revealRule, countUp, scrubWords } from "../lib/animations";
 import { BUSINESS, STATS } from "../data/site";
 import SectionHeading from "./SectionHeading";
 
@@ -18,7 +18,13 @@ export default function About() {
       root.current.querySelectorAll("[data-count]").forEach((el) => countUp(el));
     }, root);
 
-    return () => ctx.revert();
+    /* Paragraphs resolve word by word with the scroll — the house treatment. */
+    const cleans = [...root.current.querySelectorAll("[data-prose]")].map((el) => scrubWords(el));
+
+    return () => {
+      ctx.revert();
+      cleans.forEach((c) => c());
+    };
   }, []);
 
   return (
@@ -45,18 +51,18 @@ export default function About() {
 
           <div className="lg:pt-4">
             <div className="space-y-5">
-              <p className="text-[1.05rem] leading-[1.8] text-cream/85 md:text-[1.15rem]">
+              <p data-prose className="text-[1.05rem] leading-[1.8] text-cream/85 md:text-[1.15rem]">
                 {BUSINESS.legalName} is a family-owned and operated remodeling company that has been
                 working on homes in and around {BUSINESS.city}, {BUSINESS.state} for more than
                 twenty-five years.
               </p>
-              <p className="text-[0.95rem] leading-[1.85] text-cream/60">
+              <p data-prose className="text-[0.95rem] leading-[1.85] text-cream/60">
                 We specialize in roofing, siding, windows, kitchen and bathroom renovations, decks
                 and additions — the full exterior and interior of a house under one contractor. That
                 matters more than it sounds: when the roof, the siding and the windows are all one
                 company's responsibility, there is nobody left to point at when water gets in.
               </p>
-              <p className="text-[0.95rem] leading-[1.85] text-cream/60">
+              <p data-prose className="text-[0.95rem] leading-[1.85] text-cream/60">
                 We work throughout {BUSINESS.city}, {BUSINESS.state} and the surrounding areas up to
                 50 miles. If you are within range, the estimate is free and the conversation is
                 honest.

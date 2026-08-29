@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "../lib/gsap";
-import { revealHeadline, revealUp, revealRule } from "../lib/animations";
+import { revealHeadline, revealUp, revealRule, scrubWords } from "../lib/animations";
 
 /**
  * The template's signature heading: small tracked eyebrow, a bold caps
@@ -28,13 +28,21 @@ export default function SectionHeading({
       revealRule(root.current.querySelectorAll("[data-rule]"));
       revealUp(root.current.querySelectorAll("[data-eyebrow]"), { y: 18, duration: 0.8 });
       revealHeadline(root.current.querySelector("[data-h]"));
-      revealUp(root.current.querySelectorAll("[data-body], [data-action]"), {
+      revealUp(root.current.querySelectorAll("[data-action]"), {
         start: "top 90%",
         y: 24,
       });
     }, root);
 
-    return () => ctx.revert();
+    /* Body copy resolves word by word with the scroll — the house treatment
+       for paragraphs, matching the Statement section. Outside the gsap
+       context because it manages its own split/revert lifecycle. */
+    const cleanScrub = scrubWords(root.current.querySelector("[data-body]"));
+
+    return () => {
+      ctx.revert();
+      cleanScrub();
+    };
   }, []);
 
   const isLight = tone === "light";

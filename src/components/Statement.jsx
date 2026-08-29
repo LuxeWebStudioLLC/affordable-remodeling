@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
-import { gsap, SplitText, prefersReducedMotion } from "../lib/gsap";
+import { scrubWords } from "../lib/animations";
 
 /**
  * One editorial statement that resolves word by word as it crosses the
- * viewport — the only scrubbed text on the site, used exactly once so it
- * keeps feeling expensive. (Technique borrowed from the Brothers Pool build.)
+ * viewport. Originally the only scrubbed text on the site; the client liked
+ * it enough that it became the house treatment for body copy (scrubWords in
+ * lib/animations), and this section now just uses the shared helper at
+ * display scale.
  */
 const LINE =
   "Twenty-five years in, our best advertising is still a tidy jobsite and a roof that doesn't leak — one house, one street at a time.";
@@ -13,44 +15,14 @@ export default function Statement() {
   const root = useRef(null);
 
   useEffect(() => {
-    if (prefersReducedMotion()) return;
-
-    const el = root.current.querySelector("[data-statement]");
-    let split;
-    let ctx;
-
-    const run = () => {
-      ctx = gsap.context(() => {
-        // Split against final font metrics, not the fallback face.
-        split = SplitText.create(el, { type: "words" });
-        gsap.fromTo(
-          split.words,
-          { opacity: 0.14 },
-          {
-            opacity: 1,
-            ease: "none",
-            stagger: 0.5,
-            scrollTrigger: {
-              trigger: el,
-              start: "top 80%",
-              end: "bottom 55%",
-              scrub: 0.6,
-            },
-          },
-        );
-      }, root);
-    };
-
-    if (document.fonts?.ready) {
-      document.fonts.ready.then(run);
-    } else {
-      run();
-    }
-
-    return () => {
-      ctx?.revert();
-      split?.revert();
-    };
+    /* Same treatment as every paragraph now, tuned slightly wider because
+       this line is display-scale. */
+    const clean = scrubWords(root.current.querySelector("[data-statement]"), {
+      start: "top 80%",
+      end: "bottom 55%",
+      from: 0.14,
+    });
+    return clean;
   }, []);
 
   return (
