@@ -298,7 +298,10 @@
    feeling twitchy. */
 @media (max-width: 1023.98px) and (prefers-reduced-motion: no-preference) {
   .work-strip {
-    height: calc(100svh + var(--pan, 0px) * 0.8);
+    /* 1.05, up from 0.8: more scroll per pixel of pan = a calmer strip.
+       Every px of sideways travel now costs slightly more than 1px of
+       vertical scroll, which is what "smooth, not fast" comes down to. */
+    height: calc(100svh + var(--pan, 0px) * 1.05);
   }
 
   .work-stage {

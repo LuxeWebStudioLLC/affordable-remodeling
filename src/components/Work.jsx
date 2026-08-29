@@ -104,14 +104,16 @@ export default function Work() {
        smoothness (peak sideways velocity over the mean — the spikes are what
        read as stepping):
 
-         smootherstep @0.45   3.59x peak/mean   60% composed   <- was steppy
-         smoothstep   @0.35   2.45x peak/mean   50% composed   <- shipped
+         smootherstep @0.45   3.59x peak/mean   <- steppy
+         smoothstep   @0.35   2.45x peak/mean   <- still read as fast
+         smoothstep   @0.15   2.07x peak/mean   <- shipped
 
-       Cubic smoothstep rather than quintic smootherstep: the quintic is very
-       steep through the middle, which is exactly the spike that reads as a
-       jump. Dropping to cubic buys 32% lower peak velocity for 10 points of
-       composition, which is the right way round for "make it smooth". */
-    const HOLD = 0.35;
+       Tuned twice on client feedback: the plateau is what makes photos rest,
+       but every point of plateau is paid for in transit speed. 0.15 keeps a
+       noticeable settle on each photo while the move between them stays
+       close to the mean velocity. The overall tempo also dropped ~30% by
+       giving the pan more scroll runway (0.8 -> 1.05 in .work-strip). */
+    const HOLD = 0.15;
     const smoothstep = (t) => t * t * (3 - 2 * t);
 
     const snap = (u) => {
