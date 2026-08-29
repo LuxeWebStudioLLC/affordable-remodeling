@@ -62,7 +62,10 @@ export default function BuiltBy() {
           _captcha: "false",
         }),
       });
-      if (!res.ok) throw new Error(String(res.status));
+      const body = await res.json().catch(() => ({}));
+      /* FormSubmit reports failure in-body with HTTP 200 — activation
+         pending, blocked sender — so res.ok alone shows false successes. */
+      if (!res.ok || String(body.success) === "false") throw new Error("send failed");
       setStatus("sent");
     } catch {
       /* Never swallow it silently — a dropped enquiry the visitor thinks
