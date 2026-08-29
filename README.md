@@ -59,7 +59,7 @@ repo already has them.)
 ### 3. Point the real domain
 
 In Vercel → Project → **Settings → Domains**, add
-`affordableremodelingwi.com` and follow the DNS instructions. The canonical
+`affordable-remodeling.com` and follow the DNS instructions. The canonical
 URL, Open Graph tags and JSON-LD in `index.html` already reference that
 domain.
 
