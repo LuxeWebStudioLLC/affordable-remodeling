@@ -21,6 +21,7 @@ import Contact from "./components/Contact";
 import Faq from "./components/Faq";
 import Footer from "./components/Footer";
 import Debug from "./components/Debug";
+import QuotePopup from "./components/QuotePopup";
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -87,6 +88,7 @@ export default function App() {
       </a>
 
       {new URLSearchParams(window.location.search).has("debug") && <Debug />}
+      <QuotePopup />
       <Preloader onDone={onLoaded} />
       <ScrollProgress />
       <CallHandler />
