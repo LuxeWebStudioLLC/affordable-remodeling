@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap, EASE, prefersReducedMotion } from "../lib/gsap";
 import { responsive } from "../lib/img";
 import { revealUp } from "../lib/animations";
-import { BUDGETS, BUSINESS, PROJECT_TYPES, TIMELINES } from "../data/site";
+import { BUDGETS, BUSINESS, FORM_ENDPOINT, PROJECT_TYPES, TIMELINES } from "../data/site";
 import SectionHeading from "./SectionHeading";
 
 const STEPS = [
@@ -116,10 +116,34 @@ export default function Contact() {
 
     setStatus("sending");
 
-    /* No backend is wired up yet — see README for the two-line swap to
-       Formspree / Netlify Forms / your own endpoint. */
-    await new Promise((r) => setTimeout(r, 1100));
-    setStatus("sent");
+    try {
+      const res = await fetch(FORM_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          services: data.services.join(", "),
+          budget: data.budget || "Not specified",
+          timeline: data.timeline || "Not specified",
+          message: data.message,
+          contact_preference: data.contactPref,
+          _subject: `Estimate request — ${data.name}`,
+          _template: "table",
+          _captcha: "false",
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      /* FormSubmit signals activation-pending and refusals in-body. */
+      if (!res.ok || String(body.success) === "false") throw new Error("send failed");
+      setStatus("sent");
+    } catch {
+      /* Never a fake success: a homeowner who thinks their request went
+         through and never hears back is the worst outcome available. */
+      setStatus("error");
+    }
   };
 
   const reset = () => {
@@ -393,6 +417,12 @@ export default function Contact() {
                   No spam. No obligation.
                 </p>
               </div>
+
+              {status === "error" && (
+                <p role="alert" className="mt-4 text-[0.8rem] text-red-300">
+                  That didn't send — please call or text {BUSINESS.phone} instead.
+                </p>
+              )}
             </form>
           )}
         </div>

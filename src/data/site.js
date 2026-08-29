@@ -23,6 +23,15 @@ export const BUSINESS = {
   },
 };
 
+/**
+ * Estimate-form delivery. FormSubmit needs no account or API key: the FIRST
+ * submission emails an activation link to the address below, and every
+ * submission after activation is delivered straight to that inbox. Until the
+ * office clicks that link, submissions return an error and the forms show
+ * their honest failure state ("call us") instead of a fake success.
+ */
+export const FORM_ENDPOINT = "https://formsubmit.co/ajax/office@affordableremodelingwi.com";
+
 export const NAV_LINKS = [
   { label: "About", href: "#about" },
   { label: "Services", href: "#services" },

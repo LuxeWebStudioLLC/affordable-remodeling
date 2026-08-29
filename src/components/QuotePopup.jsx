@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap, EASE, prefersReducedMotion } from "../lib/gsap";
-import { BUSINESS } from "../data/site";
+import { BUSINESS, FORM_ENDPOINT } from "../data/site";
 
 const KEY = "ar:quote-prompt";
 const SNOOZE_DAYS = 7;
@@ -33,7 +33,7 @@ export default function QuotePopup() {
   const [open, setOpen] = useState(false);
   const [v, setV] = useState({ name: "", phone: "", email: "" });
   const [errors, setErrors] = useState({});
-  const [state, setState] = useState("idle"); // idle | sending | done
+  const [state, setState] = useState("idle"); // idle | sending | done | error
   const card = useRef(null);
 
   useEffect(() => {
@@ -97,11 +97,28 @@ export default function QuotePopup() {
     if (Object.keys(next).length) return;
 
     setState("sending");
-    /* Same placeholder as the main form — see README for the two-line swap
-       to a real endpoint. Both forms should be wired at the same time. */
-    await new Promise((r) => setTimeout(r, 900));
-    setState("done");
-    snooze();
+    try {
+      const res = await fetch(FORM_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name: v.name,
+          phone: v.phone,
+          email: v.email,
+          message: "Sent from the quick estimate prompt.",
+          _subject: `Call-back request — ${v.name}`,
+          _template: "table",
+          _captcha: "false",
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || String(body.success) === "false") throw new Error("send failed");
+      setState("done");
+      snooze();
+    } catch {
+      /* Honest failure with a working alternative, never a fake success. */
+      setState("error");
+    }
   };
 
   if (!open) return null;
@@ -196,6 +213,12 @@ export default function QuotePopup() {
             >
               {state === "sending" ? "Sending…" : "Request a call back"}
             </button>
+
+            {state === "error" && (
+              <p role="alert" className="mt-3 text-[0.75rem] text-red-300">
+                That didn't send — please call {BUSINESS.phone}.
+              </p>
+            )}
 
             <a
               href={BUSINESS.phoneHref}
