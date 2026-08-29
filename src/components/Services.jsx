@@ -56,9 +56,9 @@ export default function Services() {
         </div>
 
         {/* ---- The grid: hairlines drawn by the gap ---- */}
-        {/* Two columns at EVERY size. On phones the cells compact to index +
-            title + tag (blurb and points appear from md up), so ten trades
-            cost five short rows — measured 2898px -> ~1100px of scroll. */}
+        {/* Two columns at EVERY size — five rows, half the scroll of the old
+            list. The full text shows everywhere (client's call); phones get
+            smaller type rather than hidden content. */}
         <div className="mt-14 grid grid-cols-2 gap-px border border-ink/15 bg-ink/15 md:mt-16">
           {SERVICES.map((s, i) => (
             <article
@@ -78,7 +78,7 @@ export default function Services() {
                   <span className="font-accent text-[1rem] font-medium text-copper-dk italic transition-colors duration-500 group-hover:text-copper-lt">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="eyebrow hidden text-[0.6rem] text-ink/35 transition-colors duration-500 group-hover:text-blue-lt sm:block">
+                  <span className="eyebrow hidden text-[0.6rem] text-ink/35 transition-colors duration-500 group-hover:text-blue-lt min-[420px]:block">
                     {s.tag}
                   </span>
                 </div>
@@ -87,11 +87,11 @@ export default function Services() {
                   {s.title}
                 </h3>
 
-                <p className="mt-3 hidden max-w-md text-[0.85rem] leading-[1.7] text-ink/60 transition-colors duration-500 group-hover:text-cream/70 md:block">
+                <p className="mt-2.5 max-w-md text-[0.72rem] leading-[1.65] text-ink/60 transition-colors duration-500 group-hover:text-cream/70 sm:text-[0.8rem] md:mt-3 md:text-[0.85rem] md:leading-[1.7]">
                   {s.blurb}
                 </p>
 
-                <p className="mt-5 hidden text-[0.62rem] font-semibold tracking-[0.14em] text-ink/40 uppercase transition-colors duration-500 group-hover:text-cream/50 md:block">
+                <p className="mt-3.5 text-[0.55rem] font-semibold tracking-[0.12em] text-ink/40 uppercase transition-colors duration-500 group-hover:text-cream/50 md:mt-5 md:text-[0.62rem] md:tracking-[0.14em]">
                   {s.points.join("  ·  ")}
                 </p>
               </div>
