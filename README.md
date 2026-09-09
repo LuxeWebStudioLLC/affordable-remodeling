@@ -78,6 +78,51 @@ or live in this repo at all.
 
 ---
 
+## AI website assistant
+
+The "Ask us" bubble bottom-right. Answers come from `api/chat.js`, a Vercel
+serverless function that calls Claude — so the API key stays server-side and
+never enters the browser bundle.
+
+### Turning it on
+
+Vercel → Project → **Settings → Environment Variables**:
+
+| Variable | Value |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | a key from console.anthropic.com |
+| `ANTHROPIC_MODEL` | optional; defaults to `claude-haiku-4-5-20251001` |
+
+Deliberately NOT prefixed `VITE_` — Vite inlines `VITE_*` into the client
+bundle, which would publish the key to every visitor. Redeploy after adding
+it (Vercel → Deployments → ⋯ → Redeploy) so the function picks it up.
+
+Until the key is set the endpoint returns 501 and the widget says "I'm not
+connected yet — please call…" rather than sitting there looking online.
+
+### How leads actually arrive
+
+The assistant collects project details and promises follow-up, so delivery
+cannot depend on the model behaving. A **"Send to the team"** button appears
+after two visitor messages and POSTs the whole transcript to the same
+FormSubmit inbox the estimate forms use. The system prompt tells the
+assistant to point at that button once it has contact details.
+
+### Editing what it knows
+
+The system prompt lives at the top of [`api/chat.js`](api/chat.js) — business
+facts, the intake questions, and the guardrails (no invented prices, no
+services outside the ten listed trades). Edit there and redeploy.
+
+### Cost and abuse
+
+History is capped to the last 14 messages, each truncated to 1200 characters,
+with `max_tokens: 400` on Haiku — so a single exchange is fractions of a cent.
+There is no rate limiting: the endpoint is public and holds an API key, so
+watch Anthropic usage after launch and add a limiter if it gets hammered.
+
+---
+
 ## Where to edit content
 
 **Everything textual lives in one file: [`src/data/site.js`](src/data/site.js).** Phone, email,

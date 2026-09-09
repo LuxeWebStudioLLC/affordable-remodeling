@@ -127,7 +127,7 @@ export default function QuotePopup() {
     <div
       role="dialog"
       aria-label="Request an estimate"
-      className="fixed inset-x-0 bottom-0 z-[90] p-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:p-0"
+      className="fixed inset-x-0 bottom-0 z-[90] p-3 sm:inset-x-auto sm:bottom-6 sm:left-6 sm:p-0"
     >
       <div
         ref={card}

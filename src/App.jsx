@@ -22,6 +22,7 @@ import Faq from "./components/Faq";
 import Footer from "./components/Footer";
 import Debug from "./components/Debug";
 import QuotePopup from "./components/QuotePopup";
+import ChatAssistant from "./components/ChatAssistant";
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -89,6 +90,7 @@ export default function App() {
 
       {new URLSearchParams(window.location.search).has("debug") && <Debug />}
       <QuotePopup />
+      <ChatAssistant />
       <Preloader onDone={onLoaded} />
       <ScrollProgress />
       <CallHandler />
