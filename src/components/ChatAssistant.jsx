@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap, EASE, prefersReducedMotion } from "../lib/gsap";
 import { BUSINESS, FORM_ENDPOINT } from "../data/site";
+import { localAnswer } from "../lib/chatFallback";
 
 const GREETING =
   "Hi — I'm the assistant for Affordable Home Remodeling. Thinking about a project, or just have a question? Either way I can help.";
@@ -24,8 +25,13 @@ const CHIPS = [
  * FormSubmit inbox the estimate forms use — not something inferred from the
  * model's output, which would be a fragile place to put a lead.
  *
- * If ANTHROPIC_API_KEY is missing the endpoint answers 501 and the widget says
- * so plainly with the phone number, rather than sitting there looking online.
+ * If ANTHROPIC_API_KEY is missing the endpoint answers 501 and the widget
+ * falls back to its built-in answers (src/lib/chatFallback.js) — the same
+ * arrangement as the Luxe Web Studio site. A chat that announces it is "not
+ * connected" is worse than no chat: the visitor arrived with a question and
+ * got a status report about our infrastructure. The fallback covers what
+ * people actually ask a contractor, so the widget is useful from the moment
+ * it ships and gets SMARTER, not functional, once the key is set.
  */
 export default function ChatAssistant() {
   const [open, setOpen] = useState(false);
@@ -80,21 +86,16 @@ export default function ChatAssistant() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next.slice(-14) }),
       });
-      if (r.status === 501) throw new Error("unconfigured");
-      if (!r.ok) throw new Error("upstream");
+      if (!r.ok) throw new Error("fallback");
       const { reply } = await r.json();
-      setMsgs([...next, { role: "assistant", content: reply || "Sorry — could you rephrase that?" }]);
-    } catch (e) {
       setMsgs([
         ...next,
-        {
-          role: "assistant",
-          content:
-            e.message === "unconfigured"
-              ? `I'm not connected yet — please call or text ${BUSINESS.phone} and the team will help right away.`
-              : `Something went wrong on my end. Call or text ${BUSINESS.phone} and we'll pick it up from there.`,
-        },
+        { role: "assistant", content: reply?.trim() || localAnswer(q) },
       ]);
+    } catch {
+      /* 501 (no key), 502 (upstream), or offline — answer from the built-in
+         table rather than reporting our own plumbing to the visitor. */
+      setMsgs([...next, { role: "assistant", content: localAnswer(q) }]);
     } finally {
       setBusy(false);
     }
