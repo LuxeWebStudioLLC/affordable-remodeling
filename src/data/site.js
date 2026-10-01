@@ -12,8 +12,8 @@ export const BUSINESS = {
   state: "WI",
   phone: "(608) 844-8482",
   phoneHref: "tel:+16088448482",
-  email: "office@affordableremodelingwi.com",
-  emailHref: "mailto:office@affordableremodelingwi.com",
+  email: "affordableremodelingwi@gmail.com",
+  emailHref: "mailto:affordableremodelingwi@gmail.com",
   serviceArea: "La Crosse, WI and surrounding areas up to 50 miles",
   yearsInBusiness: "25+",
   booking: "https://affordableremodeling.as.me/",
@@ -24,13 +24,18 @@ export const BUSINESS = {
 };
 
 /**
- * Estimate-form delivery. FormSubmit needs no account or API key: the FIRST
- * submission emails an activation link to the address below, and every
- * submission after activation is delivered straight to that inbox. Until the
- * office clicks that link, submissions return an error and the forms show
- * their honest failure state ("call us") instead of a fake success.
+ * Estimate-form delivery — the inbox BOTH forms and the chat transcript go to.
+ *
+ * FormSubmit needs no account or API key: the FIRST submission emails an
+ * activation link to the address below, and every submission after activation
+ * is delivered straight to that inbox. Until someone clicks that link,
+ * submissions return an error and the forms show their honest failure state
+ * ("call us") instead of a fake success.
+ *
+ * ⚠️ Changing this address RESETS activation — the new inbox has to click a
+ * fresh activation link before anything delivers.
  */
-export const FORM_ENDPOINT = "https://formsubmit.co/ajax/office@affordableremodelingwi.com";
+export const FORM_ENDPOINT = "https://formsubmit.co/ajax/affordableremodelingwi@gmail.com";
 
 export const NAV_LINKS = [
   { label: "About", href: "#about" },
@@ -361,7 +366,7 @@ export const FAQS = [
   },
   {
     q: "How do I get in contact with you?",
-    a: "Call or text (608) 844-8482, email office@affordableremodelingwi.com, or send the form on this page. You can also book a time directly through our online scheduler.",
+    a: "Call or text (608) 844-8482, email affordableremodelingwi@gmail.com, or send the form on this page. You can also book a time directly through our online scheduler.",
   },
 ];
 
