@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap, EASE, prefersReducedMotion } from "../lib/gsap";
-import { BUSINESS, FORM_ENDPOINT } from "../data/site";
+import { BUDGETS, BUSINESS, FORM_ENDPOINT, PROJECT_TYPES, TIMELINES } from "../data/site";
 
 const KEY = "ar:quote-prompt";
 const SNOOZE_DAYS = 7;
@@ -31,7 +31,7 @@ const formatPhone = (raw) => {
  */
 export default function QuotePopup() {
   const [open, setOpen] = useState(false);
-  const [v, setV] = useState({ name: "", phone: "", email: "" });
+  const [v, setV] = useState({ name: "", phone: "", email: "", project: "", budget: "", timeline: "" });
   const [errors, setErrors] = useState({});
   const [state, setState] = useState("idle"); // idle | sending | done | error
   const card = useRef(null);
@@ -105,6 +105,9 @@ export default function QuotePopup() {
           name: v.name,
           phone: v.phone,
           email: v.email,
+          project: v.project || "Not specified",
+          budget: v.budget || "Not specified",
+          timeline: v.timeline || "Not specified",
           message: "Sent from the quick estimate prompt.",
           _subject: `Call-back request — ${v.name}`,
           _template: "table",
@@ -131,7 +134,7 @@ export default function QuotePopup() {
     >
       <div
         ref={card}
-        className="relative w-full overflow-hidden border border-white/12 bg-ink-2 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.85)] sm:w-[22.5rem]"
+        className="relative max-h-[86svh] w-full overflow-y-auto border border-white/12 bg-ink-2 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.85)] sm:w-[22.5rem]"
       >
         {/* brand thread: blue into gold, like the scroll progress bar */}
         <span className="block h-[2px] w-full bg-gradient-to-r from-blue via-blue-lt to-copper" />
@@ -197,6 +200,35 @@ export default function QuotePopup() {
                     errors[f.k] ? "border-red-400/70" : "border-white/12 focus:border-blue-lt"
                   }`}
                 />
+              ))}
+            </div>
+
+            {/* Project detail. Optional on purpose: the prompt exists to get a
+                callback, and six mandatory fields on a corner card is how you
+                turn a lead into a bounce. Whatever they do fill in reaches the
+                office with the enquiry. */}
+            <div className="mt-3 space-y-3">
+              {[
+                { k: "project", label: "Project type", opts: PROJECT_TYPES },
+                { k: "budget", label: "Rough budget", opts: BUDGETS },
+                { k: "timeline", label: "Timeline", opts: TIMELINES },
+              ].map((f) => (
+                <select
+                  key={f.k}
+                  aria-label={f.label}
+                  value={v[f.k]}
+                  onChange={set(f.k)}
+                  className={`w-full appearance-none border border-white/12 bg-ink px-3.5 py-3 text-[0.85rem] focus:border-blue-lt focus:outline-none ${
+                    v[f.k] ? "text-cream" : "text-cream/35"
+                  }`}
+                >
+                  <option value="">{f.label} (optional)</option>
+                  {f.opts.map((o) => (
+                    <option key={o} value={o} className="bg-navy text-cream">
+                      {o}
+                    </option>
+                  ))}
+                </select>
               ))}
             </div>
 
