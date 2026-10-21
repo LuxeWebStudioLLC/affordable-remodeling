@@ -106,10 +106,11 @@ function TrustPanel() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      revealUp(root.current.querySelectorAll("[data-cred]"), {
-        start: "top 90%",
-        y: 34,
-        stagger: 0.08,
+      /* One-shot entrance only — no scrub. The stacking itself is CSS. */
+      revealUp(root.current.querySelectorAll("[data-card]"), {
+        start: "top 92%",
+        y: 38,
+        stagger: 0.1,
       });
     }, root);
     return () => ctx.revert();
@@ -127,18 +128,66 @@ function TrustPanel() {
           className="mx-auto"
         />
 
-        <div className="mt-14 grid gap-px overflow-hidden border border-ink/10 bg-ink/10 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
-          {CREDENTIALS.map((c, i) => (
-            <div data-cred key={c.title} className="group bg-cream p-7 md:p-8">
-              <p className="font-display text-[0.7rem] tracking-[0.2em] text-copper">
-                {String(i + 1).padStart(2, "0")}
-              </p>
-              <h3 className="mt-5 text-[1.1rem] leading-[1.1] text-ink transition-colors duration-500 group-hover:text-blue">
-                {c.title}
-              </h3>
-              <p className="mt-3.5 text-[0.85rem] leading-[1.75] text-ink/60">{c.body}</p>
-            </div>
-          ))}
+        {/* ---- The deck ----
+            Cards stack on top of one another as you scroll: each is sticky at
+            a slightly lower offset than the last, so the one above stays
+            visible as a spine while the next slides over it.
+
+            Pure CSS sticky, deliberately. The Work strip taught this the hard
+            way — anything driven per-frame from scrollY stutters on iOS, where
+            the compositor scrolls and the main thread is throttled. Sticky is
+            handled by the compositor, so this cannot drop a frame. The only
+            JS here is the one-shot entrance.
+
+            The section must NOT be overflow-hidden: that would make it a
+            scroll container and the cards would stick to the section instead
+            of the viewport. */}
+        <div className="mt-14 md:mt-20">
+          {CREDENTIALS.map((c, i) => {
+            const last = i === CREDENTIALS.length - 1;
+            return (
+              <article
+                data-card
+                key={c.title}
+                style={{ top: `calc(5.5rem + ${i * 1.15}rem)`, zIndex: i + 1 }}
+                className={`sticky mb-6 overflow-hidden border shadow-[0_24px_60px_-32px_rgba(10,14,23,0.45)] ${
+                  last
+                    ? "border-navy bg-navy text-cream"
+                    : "border-ink/12 bg-cream text-ink"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="block h-[2px] w-full bg-gradient-to-r from-blue via-blue-lt to-copper"
+                />
+                <div className="grid gap-5 p-7 sm:grid-cols-[auto_1fr] sm:gap-9 sm:p-10 md:p-12">
+                  <p
+                    className={`font-accent text-[2.6rem] leading-none font-medium italic md:text-[3.4rem] ${
+                      last ? "text-copper-lt" : "text-copper-dk"
+                    }`}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </p>
+                  <div className="min-w-0">
+                    <h3
+                      className={`text-[1.5rem] leading-[1.08] md:text-[2rem] ${
+                        last ? "text-cream" : "text-ink"
+                      }`}
+                    >
+                      {c.title}
+                    </h3>
+                    <p
+                      className={`mt-4 max-w-xl text-[0.92rem] leading-[1.8] ${
+                        last ? "text-cream/70" : "text-ink/65"
+                      }`}
+                    >
+                      {c.body}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
