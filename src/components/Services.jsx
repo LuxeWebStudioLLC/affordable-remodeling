@@ -53,6 +53,7 @@ export default function Services() {
         const next = cards[i + 1];
         if (!next) return;
         const scrim = card.querySelector("[data-scrim]");
+        const face = card.querySelector("[data-face]");
         const tl = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
@@ -62,10 +63,15 @@ export default function Services() {
             scrub: true,
           },
         });
-        /* scaleX/scaleY spelled out, not the `scale` shorthand: through the
-           shorthand GSAP only wrote the Y axis here (transform: scale(1,
-           0.94)), which squashes the card instead of receding it. */
-        tl.fromTo(card, { scaleX: 1, scaleY: 1 }, { scaleX: 0.94, scaleY: 0.94 }, 0);
+        /* The inner face is scaled, never the sticky <article> itself. A
+           transform on a sticky element makes it a containing block and the
+           two features interact badly: writing scale there produced frames
+           of transform: scale(1, 0.94), squashing the card instead of
+           receding it. The face is a plain block, so it just scales.
+
+           scaleX/scaleY spelled out rather than the `scale` shorthand, which
+           wrote only the Y axis here. */
+        tl.fromTo(face, { scaleX: 1, scaleY: 1 }, { scaleX: 0.94, scaleY: 0.94 }, 0);
         if (scrim) tl.fromTo(scrim, { opacity: 0 }, { opacity: 0.62 }, 0);
       });
     }, root);
@@ -107,10 +113,14 @@ export default function Services() {
             <article
               data-card
               key={s.id}
-              style={{ top: `${STICK_TOP}px`, transformOrigin: "50% 0%" }}
-              className="sticky mb-[9vh] h-[min(64svh,540px)] will-change-transform last:mb-0"
+              style={{ top: `${STICK_TOP}px` }}
+              className="sticky mb-[9vh] h-[min(64svh,540px)] last:mb-0"
             >
-              <div className="relative flex h-full flex-col justify-end overflow-hidden border border-white/10 bg-gradient-to-br from-navy via-ink-2 to-ink p-7 shadow-[0_30px_80px_-28px_rgba(10,14,23,0.7)] sm:p-10 md:p-14">
+              <div
+                data-face
+                style={{ transformOrigin: "50% 0%" }}
+                className="relative flex h-full flex-col justify-end overflow-hidden border border-white/10 bg-gradient-to-br from-navy via-ink-2 to-ink p-7 shadow-[0_30px_80px_-28px_rgba(10,14,23,0.7)] will-change-transform sm:p-10 md:p-14"
+              >
                 {/* Oversized outlined numeral, bled off the corner */}
                 <span
                   aria-hidden="true"
