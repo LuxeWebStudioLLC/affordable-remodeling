@@ -644,22 +644,29 @@ textarea.field-input:focus {
    gap between cards, radius and transform-origin — because the
    feel of the deck is mostly those numbers.
 
-   The sticking is native position: sticky, so the compositor
-   owns it. Only scale and brightness are scrubbed, in
-   Services.jsx. brightness() is the reference's dim and it is
-   what the covered cards are supposed to do; an opacity scrim
-   over the top is cheaper but visibly flatter, because it tints
-   toward one colour instead of taking the whole card down. */
+   The cards deliberately do NOT stick. The reference's CSS says
+   position: sticky, but on the live site that never engages --
+   html{overflow:hidden} with the scroll on body defeats it -- so
+   what webluxestudio.com actually shows is a plain column of
+   cards scrolling past at normal speed, each receding as the next
+   arrives. Measured there: card tops move -160px per -160px of
+   scroll with no plateau at the sticky offset. Pinning them into
+   a pile at the top is a different effect, and the wrong one.
+
+   Only scale and brightness are scrubbed, in Services.jsx.
+   brightness() is the reference's dim; an opacity scrim is
+   cheaper but visibly flatter, because it tints toward one colour
+   instead of taking the whole card down. */
 .trade-stack {
   display: flex;
   flex-direction: column;
 }
 
 .trade-card {
-  position: sticky;
-  top: 96px;
   height: min(72vh, 620px);
   margin-bottom: 14vh;
+  /* shrinks toward its own top edge as it leaves, so the card
+     recedes rather than drifting up the screen */
   transform-origin: 50% 0%;
   will-change: transform, filter;
 }
@@ -728,7 +735,6 @@ textarea.field-input:focus {
 
 @media (max-width: 720px) {
   .trade-card {
-    top: 84px;
     height: min(74vh, 560px);
     margin-bottom: 10vh;
   }
@@ -744,11 +750,10 @@ textarea.field-input:focus {
   }
 }
 
-/* No deck without motion: the cards become a plain column. */
+/* Without motion the scrub is skipped, so close the gaps that
+   only existed to give the recede room to play out. */
 @media (prefers-reduced-motion: reduce) {
   .trade-card {
-    position: relative;
-    top: auto;
     margin-bottom: 1.5rem;
   }
 }

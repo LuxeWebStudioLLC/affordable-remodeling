@@ -8,26 +8,20 @@ import SectionHeading from "./SectionHeading";
  * The ten trades as a stacking card deck — the Luxe Web Studio capabilities
  * section, rebuilt in this site's palette.
  *
- * Each card sticks near the top of the viewport; the next slides over it
- * while the covered card scales back and dims, so the stack reads as
- * physical cards rather than a list. Sticking is pure CSS `position: sticky`
- * (see .trade-card in index.css), which the compositor handles — the Work
- * strip taught that anything positioning a pinned element per frame from
- * scrollY stutters on iOS.
+ * The cards scroll past in normal flow; as the NEXT one comes up behind it,
+ * the outgoing card scales 1 -> 0.94 and dims brightness(1) -> brightness(0.5).
+ * That is what the live site does, verified against it directly: its card
+ * tops move -160px per -160px of scroll with no plateau, so despite the
+ * reference CSS saying position: sticky, nothing ever pins. Pinning the
+ * cards into a pile at the top of the viewport is a different effect.
  *
- * The scrub is the reference's, unchanged: scale 1 -> 0.94 and
- * brightness(1) -> brightness(0.5) on one tween, linear, driven by the NEXT
- * card's approach. brightness is the whole point of the recede — it takes
- * the entire card down, image, border and all, where an overlay only tints
- * it toward one colour.
+ * brightness is the whole point of the recede — it takes the entire card
+ * down, border and gradient with it, where an overlay only tints it toward
+ * one colour.
  *
- * Trade-off worth knowing: a deck costs more scroll than the grid it
- * replaced, because the travel between cards IS the animation. Ten cards at
- * the reference's geometry is roughly nine screens.
+ * Trade-off worth knowing: this costs more scroll than the grid it replaced,
+ * because the travel between cards IS the animation.
  */
-
-/** Where a card comes to rest — matches `top` on .trade-card. */
-const stickTop = () => (window.matchMedia("(max-width: 720px)").matches ? 84 : 96);
 
 export default function Services() {
   const root = useRef(null);
@@ -42,10 +36,8 @@ export default function Services() {
 
       if (prefersReducedMotion()) return;
 
-      /* As the NEXT card slides over, the covered one scales back and dims.
-         The end is the sticky offset, so the recede finishes exactly as the
-         incoming card lands — hence invalidateOnRefresh, since that offset
-         changes at the 720px breakpoint. */
+      /* The reference's tween, verbatim: the recede runs while the next card
+         travels from the bottom of the viewport to 96px below the top. */
       const cards = gsap.utils.toArray(".trade-card", root.current);
       cards.forEach((card, i) => {
         const next = cards[i + 1];
@@ -57,13 +49,7 @@ export default function Services() {
             scale: 0.94,
             filter: "brightness(0.5)",
             ease: "none",
-            scrollTrigger: {
-              trigger: next,
-              start: "top bottom",
-              end: () => `top ${stickTop()}px`,
-              scrub: true,
-              invalidateOnRefresh: true,
-            },
+            scrollTrigger: { trigger: next, start: "top bottom", end: "top 96px", scrub: true },
           },
         );
       });
