@@ -644,29 +644,45 @@ textarea.field-input:focus {
    gap between cards, radius and transform-origin — because the
    feel of the deck is mostly those numbers.
 
-   The cards deliberately do NOT stick. The reference's CSS says
-   position: sticky, but on the live site that never engages --
-   html{overflow:hidden} with the scroll on body defeats it -- so
-   what webluxestudio.com actually shows is a plain column of
-   cards scrolling past at normal speed, each receding as the next
-   arrives. Measured there: card tops move -160px per -160px of
-   scroll with no plateau at the sticky offset. Pinning them into
-   a pile at the top is a different effect, and the wrong one.
+   The sticking is native position: sticky, so the compositor
+   owns it. Do not "discover" that the reference doesn't pin and
+   take this out: ScrollSmoother eases scroll over ~2s, so any
+   measurement that writes scrollTop and reads back a few hundred
+   ms later catches the content mid-catch-up and shows the cards
+   moving 1:1 with no plateau. Let it settle ~2.5s and the truth
+   appears -- cards pinned together at the offset, the covered one
+   scaled to 0.94 behind the incoming one.
 
    Only scale and brightness are scrubbed, in Services.jsx.
-   brightness() is the reference's dim; an opacity scrim is
-   cheaper but visibly flatter, because it tints toward one colour
-   instead of taking the whole card down. */
+   brightness() is the reference's dim and what the covered cards
+   are supposed to do; an opacity scrim
+   over the top is cheaper but visibly flatter, because it tints
+   toward one colour instead of taking the whole card down. */
 .trade-stack {
   display: flex;
   flex-direction: column;
 }
 
 .trade-card {
+  position: sticky;
+  top: 96px;
   height: min(72vh, 620px);
   margin-bottom: 14vh;
-  /* shrinks toward its own top edge as it leaves, so the card
-     recedes rather than drifting up the screen */
+}
+
+/* ScrollTrigger is doing the pinning (see Services.jsx) and owns this
+   element's transform, so sticky must get out of its way. `top` has to be
+   cleared explicitly too: ScrollTrigger copies the pinned element's
+   positioning onto the pin-spacer it wraps it in, and a leftover top: 96px
+   lands there, offsetting every card by the sticky offset a second time. */
+.trade-stack.is-js-pinned .trade-card {
+  position: static;
+  top: auto;
+}
+
+/* The recede lives on the face, so the pin and the scale never write the
+   same element's transform. */
+.trade-card-inner {
   transform-origin: 50% 0%;
   will-change: transform, filter;
 }
@@ -735,6 +751,7 @@ textarea.field-input:focus {
 
 @media (max-width: 720px) {
   .trade-card {
+    top: 84px;
     height: min(74vh, 560px);
     margin-bottom: 10vh;
   }
@@ -750,10 +767,11 @@ textarea.field-input:focus {
   }
 }
 
-/* Without motion the scrub is skipped, so close the gaps that
-   only existed to give the recede room to play out. */
+/* No deck without motion: the cards become a plain column. */
 @media (prefers-reduced-motion: reduce) {
   .trade-card {
+    position: relative;
+    top: auto;
     margin-bottom: 1.5rem;
   }
 }

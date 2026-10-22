@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { gsap, prefersReducedMotion } from "../lib/gsap";
+import { gsap, ScrollTrigger, prefersReducedMotion } from "../lib/gsap";
 import { revealUp, scrubWords } from "../lib/animations";
 import { SERVICES } from "../data/site";
 import SectionHeading from "./SectionHeading";
@@ -8,27 +8,34 @@ import SectionHeading from "./SectionHeading";
  * The ten trades as a stacking card deck — the Luxe Web Studio capabilities
  * section, rebuilt in this site's palette.
  *
- * The cards scroll past in normal flow; as the NEXT one comes up behind it,
- * the outgoing card scales 1 -> 0.94 and dims brightness(1) -> brightness(0.5).
- * That is what the live site does, verified against it directly: its card
- * tops move -160px per -160px of scroll with no plateau, so despite the
- * reference CSS saying position: sticky, nothing ever pins. Pinning the
- * cards into a pile at the top of the viewport is a different effect.
+ * Each card sticks near the top of the viewport; the next slides over it
+ * while the covered card scales back and dims, so the stack reads as
+ * physical cards rather than a list. Sticking is pure CSS `position: sticky`
+ * (see .trade-card in index.css), which the compositor handles — the Work
+ * strip taught that anything positioning a pinned element per frame from
+ * scrollY stutters on iOS.
  *
- * brightness is the whole point of the recede — it takes the entire card
- * down, border and gradient with it, where an overlay only tints it toward
- * one colour.
+ * The scrub is the reference's, unchanged: scale 1 -> 0.94 and
+ * brightness(1) -> brightness(0.5) on one tween, linear, driven by the NEXT
+ * card's approach. brightness is the whole point of the recede — it takes
+ * the entire card down, image, border and all, where an overlay only tints
+ * it toward one colour.
  *
- * Trade-off worth knowing: this costs more scroll than the grid it replaced,
- * because the travel between cards IS the animation.
+ * Trade-off worth knowing: a deck costs more scroll than the grid it
+ * replaced, because the travel between cards IS the animation. Ten cards at
+ * the reference's geometry is roughly nine screens.
  */
+
+/** Where a card comes to rest — matches `top` on .trade-card. */
+const stickTop = () => (window.matchMedia("(max-width: 720px)").matches ? 84 : 96);
 
 export default function Services() {
   const root = useRef(null);
   const introRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    let cleanupPinWatch = null;
+    const ctx = gsap.context((self) => {
       revealUp(root.current.querySelectorAll("[data-deck-head]"), {
         start: "top 92%",
         y: 28,
@@ -36,20 +43,78 @@ export default function Services() {
 
       if (prefersReducedMotion()) return;
 
-      /* The reference's tween, verbatim: the recede runs while the next card
-         travels from the bottom of the viewport to 96px below the top. */
       const cards = gsap.utils.toArray(".trade-card", root.current);
+      const last = cards[cards.length - 1];
+
+      /* ScrollSmoother's wrapper is a fixed, overflow:hidden box and its
+         content is transformed, so CSS position: sticky has no scrollport to
+         stick to and the deck silently falls apart into a plain column — on
+         pointer devices only, since smoothTouch is 0 and touch keeps native
+         scrolling. Where the smoother runs, ScrollTrigger pins instead, which
+         is GSAP's own answer to this. Touch keeps real sticky: pinning on iOS
+         is what made the Work strip stutter for weeks. */
+      const pinWithScrollTrigger = () => {
+        root.current.querySelector(".trade-stack").classList.add("is-js-pinned");
+        cards.slice(0, -1).forEach((card) => {
+          ScrollTrigger.create({
+            trigger: card,
+            start: () => `top ${stickTop()}px`,
+            endTrigger: last,
+            end: () => `top ${stickTop()}px`,
+            pin: true,
+            pinSpacing: false,
+          });
+        });
+      };
+
+      /* Deferred, because React runs child effects before parent ones: the
+         smoother App creates does not exist while this effect body runs, so
+         asking for it here always answers no — which is exactly how the deck
+         shipped unpinned. StrictMode then tears the smoother down and builds
+         it again, so a single frame's wait is not enough either; this waits
+         for the refresh that App fires once everything is up.
+
+         The test is the mechanism rather than "is there a smoother": on touch
+         the smoother leaves the wrapper static and native sticky works fine,
+         and only a fixed wrapper actually breaks it. */
+      if (last) {
+        let pinned = false;
+        const maybePin = () => {
+          if (pinned) return;
+          const wrap = document.querySelector("#smooth-wrapper");
+          if (!wrap || getComputedStyle(wrap).position !== "fixed") return;
+          pinned = true;
+          self.add(pinWithScrollTrigger);
+          ScrollTrigger.refresh();
+        };
+        ScrollTrigger.addEventListener("refresh", maybePin);
+        self.add(() => gsap.delayedCall(0.25, maybePin));
+        cleanupPinWatch = () => ScrollTrigger.removeEventListener("refresh", maybePin);
+      }
+
+      /* As the NEXT card slides over, the covered one scales back and dims.
+         The target is the inner face, not the card: ScrollTrigger pins by
+         writing the card's own transform, so a scale tween on the same
+         element would fight it. The end is the resting offset, so the recede
+         finishes exactly as the incoming card lands — hence
+         invalidateOnRefresh, since that offset changes at 720px. */
       cards.forEach((card, i) => {
         const next = cards[i + 1];
         if (!next) return;
         gsap.fromTo(
-          card,
+          card.querySelector(".trade-card-inner"),
           { scale: 1, filter: "brightness(1)" },
           {
             scale: 0.94,
             filter: "brightness(0.5)",
             ease: "none",
-            scrollTrigger: { trigger: next, start: "top bottom", end: "top 96px", scrub: true },
+            scrollTrigger: {
+              trigger: next,
+              start: "top bottom",
+              end: () => `top ${stickTop()}px`,
+              scrub: true,
+              invalidateOnRefresh: true,
+            },
           },
         );
       });
@@ -57,6 +122,7 @@ export default function Services() {
 
     const cleanScrub = scrubWords(introRef.current);
     return () => {
+      cleanupPinWatch?.();
       ctx.revert();
       cleanScrub();
     };
