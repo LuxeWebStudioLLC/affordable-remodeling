@@ -632,3 +632,123 @@ textarea.field-input:focus {
     display: none;
   }
 }
+
+/* ============================================================
+   TRADES DECK  (#services)
+   ============================================================
+
+   The stacking card deck, matched to the Luxe Web Studio
+   capabilities section: each card sticks near the top, the next
+   slides over it, and the covered card scales back and dims.
+   Geometry is the reference's — sticky offset, card height, the
+   gap between cards, radius and transform-origin — because the
+   feel of the deck is mostly those numbers.
+
+   The sticking is native position: sticky, so the compositor
+   owns it. Only scale and brightness are scrubbed, in
+   Services.jsx. brightness() is the reference's dim and it is
+   what the covered cards are supposed to do; an opacity scrim
+   over the top is cheaper but visibly flatter, because it tints
+   toward one colour instead of taking the whole card down. */
+.trade-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.trade-card {
+  position: sticky;
+  top: 96px;
+  height: min(72vh, 620px);
+  margin-bottom: 14vh;
+  transform-origin: 50% 0%;
+  will-change: transform, filter;
+}
+
+.trade-card:last-child {
+  margin-bottom: 0;
+}
+
+.trade-card-inner {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  overflow: hidden;
+  padding: clamp(28px, 4vw, 56px);
+  border: 1px solid rgba(247, 244, 238, 0.18);
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(247, 244, 238, 0.08) 0%, rgba(247, 244, 238, 0) 40%),
+    radial-gradient(120% 90% at 18% 0%, var(--tone-a, #16277a) 0%, #121828 58%, #0a0e17 100%);
+  box-shadow: 0 30px 80px rgba(7, 13, 51, 0.45);
+}
+
+/* Tonal drift down the deck so ten cards don't read as one card
+   repeated — the reference does the same across its four. */
+.trade-card[data-tone="2"] {
+  --tone-a: #1c2437;
+}
+.trade-card[data-tone="3"] {
+  --tone-a: #3a2c16;
+}
+.trade-card[data-tone="4"] {
+  --tone-a: #101d5e;
+}
+
+.trade-idx {
+  position: absolute;
+  top: clamp(24px, 3vw, 40px);
+  left: clamp(28px, 4vw, 56px);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(111, 157, 255, 0.7);
+}
+
+.trade-body {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+}
+
+.trade-ghost {
+  position: absolute;
+  top: -0.12em;
+  right: -0.04em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(200px, 30vw, 440px);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(111, 157, 255, 0.22);
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 720px) {
+  .trade-card {
+    top: 84px;
+    height: min(74vh, 560px);
+    margin-bottom: 10vh;
+  }
+
+  .trade-card-inner {
+    border-radius: 22px;
+    padding: 24px 22px;
+  }
+
+  .trade-ghost {
+    font-size: 190px;
+    right: -0.06em;
+  }
+}
+
+/* No deck without motion: the cards become a plain column. */
+@media (prefers-reduced-motion: reduce) {
+  .trade-card {
+    position: relative;
+    top: auto;
+    margin-bottom: 1.5rem;
+  }
+}
