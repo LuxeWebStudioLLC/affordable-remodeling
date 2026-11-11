@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /owner
 
 Sitemap: https://www.affordable-remodeling.com/sitemap.xml

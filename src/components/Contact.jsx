@@ -3,6 +3,7 @@ import { gsap, EASE, prefersReducedMotion } from "../lib/gsap";
 import { responsive } from "../lib/img";
 import { revealUp } from "../lib/animations";
 import { BUDGETS, BUSINESS, FORM_ENDPOINT, PROJECT_TYPES, TIMELINES } from "../data/site";
+import { copyLeadToCrm } from "../lib/leads";
 import SectionHeading from "./SectionHeading";
 
 const STEPS = [
@@ -117,6 +118,19 @@ export default function Contact() {
     setStatus("sending");
 
     try {
+      copyLeadToCrm({
+        source: "estimate form",
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        services: data.services.join(", "),
+        budget: data.budget,
+        timeline: data.timeline,
+        message: data.message,
+        contact_preference: data.contactPref,
+      });
+
       const res = await fetch(FORM_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },

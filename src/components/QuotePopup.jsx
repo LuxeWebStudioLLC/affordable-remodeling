@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap, EASE, prefersReducedMotion } from "../lib/gsap";
 import { BUDGETS, BUSINESS, FORM_ENDPOINT, PROJECT_TYPES, TIMELINES } from "../data/site";
+import { copyLeadToCrm } from "../lib/leads";
 
 const KEY = "ar:quote-prompt";
 const SNOOZE_DAYS = 7;
@@ -98,6 +99,17 @@ export default function QuotePopup() {
 
     setState("sending");
     try {
+      copyLeadToCrm({
+        source: "estimate prompt",
+        name: v.name,
+        email: v.email,
+        phone: v.phone,
+        services: v.project,
+        budget: v.budget,
+        timeline: v.timeline,
+        message: "Sent from the quick estimate prompt.",
+      });
+
       const res = await fetch(FORM_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },

@@ -2,9 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { gsap, EASE, prefersReducedMotion } from "../lib/gsap";
 import { BUSINESS, FORM_ENDPOINT } from "../data/site";
 import { localAnswer } from "../lib/chatFallback";
+import { copyLeadToCrm } from "../lib/leads";
 
 const GREETING =
   "Hi — I'm the assistant for Affordable Home Remodeling. Thinking about a project, or just have a question? Either way I can help.";
+
+/* Pulls a phone or email back out of the transcript so a chat lead reaches the
+   CRM with something to contact, the way the other two forms do. The assistant
+   asks for both, but a visitor may give only one, and a lead with neither is
+   not worth forwarding. */
+const contactIn = (text, re) => (String(text).match(re) || [""])[0].trim();
 
 const CHIPS = [
   "I want an estimate",
@@ -109,6 +116,14 @@ export default function ChatAssistant() {
       .map((m) => `${m.role === "user" ? "Visitor" : "Assistant"}: ${m.content}`)
       .join("\n\n");
     try {
+      copyLeadToCrm({
+        source: "chat assistant",
+        name: "Website chat enquiry",
+        email: contactIn(transcript, /[^\s@]+@[^\s@]+\.[^\s@]{2,}/),
+        phone: contactIn(transcript, /(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}/),
+        message: transcript,
+      });
+
       const r = await fetch(FORM_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
